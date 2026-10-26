@@ -2,8 +2,8 @@
 
 Usage: python scripts/build.py
 Fetches the public contribution calendar, writes assets/*.svg and README.md.
-Headlines are set in Instrument Serif, everything else in JetBrains Mono at light weights (both SIL OFL).
-Headlines type themselves character by character; labels and cards are revealed by a swipe bar.
+Headlines are set in Outfit Light, everything else in JetBrains Mono at light weights (both SIL OFL).
+Headlines type themselves character by character; labels and cards fade in, rising into focus.
 Toolbox icons are Simple Icons paths (CC0), vendored in icons/stack.json.
 """
 import base64
@@ -34,6 +34,11 @@ ROLE = "ICT Engineer"
 WORDS = ["dream it", "design it", "build it", "train it", "ship it", "scale it"]
 FIELDS = ["AI/ML", "Software Engineering", "Cloud Infrastructure"]
 
+PLACES = [  # (label or None, label side, latitude, longitude): where I've worked
+    ("OSLO", 1, 59.91, 10.75), ("AACHEN", -1, 50.78, 6.08), (None, 1, 49.59, 11.0), (None, 1, 49.25, 10.83),
+    ("TUNIS", 1, 36.81, 10.18), ("MUSCAT", 1, 23.59, 58.41),
+]
+
 FEATURED = [  # (slug, eyebrow, title, text, tech, url, badge)
     ("claritychains", "AI · PROCUREMENT", "ClarityChains",
      "LLM agents that read supplier offers, flag the traps and pick a winner. "
@@ -56,9 +61,9 @@ WORK = [
      "A network that learns when to block a flood. 94.6% detection.",
      "Ryu · Mininet · TensorFlow",
      f"https://github.com/{USER}/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks"),
-    ("car-price", "MACHINE LEARNING", "Car Price ML",
-     "Scraped 4 marketplaces to price a used car. R² 0.75.",
-     "BeautifulSoup · pandas · scikit-learn", f"https://github.com/{USER}/ML-Car-Price-Prediction"),
+    ("acoustic", "SIGNALS · ML", "Acoustic Failure",
+     "Listens to acoustic emissions and flags a part before it fails.",
+     "librosa · scikit-learn · CNN · LSTM", f"https://github.com/{USER}/Failure-Detection-AE"),
 ]
 
 LINKS = [
@@ -78,15 +83,16 @@ FONT_FACES = {  # weight -> (css class, family, file)
     200: ("w2", "JBMonoXL", "jbmono-200"),
     300: ("w3", "JBMonoL", "jbmono-300"),
     400: ("w4", "JBMono", "jbmono-400"),
-    "sans": ("s", "Figtree", "figtree-500"),
+    "sans": ("s", "Outfit", "outfit-300"),
 }
-SANS = json.loads((FONTS / "figtree-advances.json").read_text(encoding="utf-8"))
-TRACK = -0.015  # display tracking in em, slightly tight for headlines
+SANS = json.loads((FONTS / "outfit-advances.json").read_text(encoding="utf-8"))
+TRACK = -0.01  # display tracking in em, slightly tight for headlines
 ICONS = json.loads((ROOT / "icons" / "stack.json").read_text(encoding="utf-8"))
 FALLBACK = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 MONO = 0.6  # JetBrains Mono advance in em
 
 EASE = ".65 0 .35 1"
+SOFT = ".22 1 .36 1"  # ease-out, for fades
 BASE_CSS = """
 .f { animation: fade 1s ease-out both; }
 .dw { stroke-dasharray: 1 1; animation: draw 1.1s cubic-bezier(.65,0,.35,1) both; }
@@ -117,8 +123,8 @@ def font_css(body):
                            f"src:url(data:font/woff2;base64,{data}) format('woff2')}}"
                            f".{cls}{{font-family:{family},{FALLBACK};font-weight:{weight}}}")
             else:
-                css.append(f"@font-face{{font-family:{family};font-weight:500;src:url(data:font/woff2;base64,{data}) format('woff2')}}"
-                           f".{cls}{{font-family:{family},-apple-system,system-ui,sans-serif;font-weight:500;"
+                css.append(f"@font-face{{font-family:{family};font-weight:300;src:url(data:font/woff2;base64,{data}) format('woff2')}}"
+                           f".{cls}{{font-family:{family},-apple-system,system-ui,sans-serif;font-weight:300;"
                            f"font-kerning:none;letter-spacing:{TRACK}em}}")
     return "".join(css)
 
@@ -223,21 +229,19 @@ def headline(parts, x, y, size, t, begin, per=0.07, anchor="start", cursor="hide
     return "".join(out), x + cum[-1]
 
 
-def swipe(content, x, y, w, h, color, begin, dur=0.8):
-    """A bar sweeps in from the left, uncovers the content and leaves to the right."""
-    timing = f'keyTimes="0;0.5;1" calcMode="spline" keySplines="{EASE};{EASE}" dur="{dur}s" begin="{begin:.2f}s" fill="freeze"'
-    return (f'<g>{content}{HIDE.format("opacity", 0)}<set attributeName="opacity" to="1" begin="{begin + dur / 2:.2f}s" fill="freeze"/></g>'
-            f'<rect x="{x:.1f}" y="{y:.1f}" width="0" height="{h:.1f}" fill="{color}">'
-            f'<animate attributeName="width" values="0;{w:.1f};0" {timing}/>'
-            f'<animate attributeName="x" values="{x:.1f};{x:.1f};{x + w:.1f}" {timing}/></rect>')
+def reveal(content, begin, dur=1.1, rise=10):
+    """Content fades in while rising a few pixels and coming into focus."""
+    fid = uid("rv")
+    timing = f'calcMode="spline" keyTimes="0;1" keySplines="{SOFT}" dur="{dur}s" begin="{begin:.2f}s" fill="freeze"'
+    return (f'<filter id="{fid}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="0">'
+            f'{HIDE.format("stdDeviation", 6)}<animate attributeName="stdDeviation" values="6;0" {timing}/></feGaussianBlur></filter>'
+            f'<g filter="url(#{fid})">{HIDE.format("opacity", 0)}<animate attributeName="opacity" values="0;1" {timing}/>'
+            f'<animateTransform attributeName="transform" type="translate" values="0 {rise};0 0" {timing}/>{content}</g>')
 
 
 def label(text, x, y, size, t, begin, color=None, spacing=2, anchor="start", weight=400):
-    """Uppercase mono label revealed by a swipe."""
-    w = mono_width(text, size, spacing)
-    left = x - (w / 2 if anchor == "middle" else w if anchor == "end" else 0)
-    return swipe(mono(text, x, y, size, color or t["muted"], weight, anchor, spacing),
-                 left - 4, y - size * 0.95, w + 6, size * 1.3, t["acc"], begin)
+    """Uppercase mono label that fades in."""
+    return reveal(mono(text, x, y, size, color or t["muted"], weight, anchor, spacing), begin)
 
 
 def top(theme, total, since):
@@ -257,28 +261,45 @@ def top(theme, total, since):
     return svg(W, 58, body, f"Ons Kouki · {total} contributions since {since}")
 
 
-def globe(cx, cy, r, t):
-    """Wireframe globe: latitude rings stay put, meridians breathe to fake a rotation."""
+def globe(cx, cy, r, t, frames=96, dur=48, tilt=0.16):
+    """Wireframe globe that spins west to east, with a pin on every place I've worked."""
+    ct = math.sqrt(1 - tilt ** 2)
+    lon0 = [70 - 360 * k / frames for k in range(frames + 1)]  # longitude facing the viewer, per frame
+    spin = f'dur="{dur}s" repeatCount="indefinite"'
     out = [f'<circle class="dw" {delay(0.4)} pathLength="1" cx="{cx}" cy="{cy}" r="{r}" stroke="{t["ink"]}" stroke-width="1.2"/>']
     for k, lat in enumerate((-60, -30, 0, 30, 60)):
         a = math.radians(lat)
         rx = r * math.cos(a)
-        out.append(f'<ellipse class="dw" {delay(0.6 + k * 0.08)} pathLength="1" cx="{cx}" cy="{cy + r * math.sin(a):.1f}" rx="{rx:.1f}" ry="{rx * 0.16:.1f}" '
+        out.append(f'<ellipse class="dw" {delay(0.6 + k * 0.08)} pathLength="1" cx="{cx}" cy="{cy - r * math.sin(a) * ct:.1f}" rx="{rx:.1f}" ry="{rx * tilt:.1f}" '
                    f'stroke="{t["faint"]}" stroke-width="1"/>')
-    samples, n = 24, 6
-    for m in range(n):
-        phase = math.pi * m / n
-        vals = ";".join(f"{r * abs(math.sin(phase + math.pi * s / samples)):.1f}" for s in range(samples + 1))
-        out.append(f'<ellipse class="f" {delay(1.0)} cx="{cx}" cy="{cy}" ry="{r}" rx="{r * abs(math.sin(phase)):.1f}" stroke="{t["muted"]}" stroke-width="0.8">'
-                   f'<animate attributeName="rx" values="{vals}" dur="16s" repeatCount="indefinite"/></ellipse>')
+    for m in range(6):
+        rxs = [r * abs(math.sin(math.radians(30 * m - l))) for l in lon0]
+        out.append(f'<ellipse class="f" {delay(1.0)} cx="{cx}" cy="{cy}" ry="{r}" rx="{rxs[0]:.1f}" stroke="{t["muted"]}" stroke-width="0.8">'
+                   f'<animate attributeName="rx" values="{";".join(f"{v:.1f}" for v in rxs)}" {spin}/></ellipse>')
     # tilted orbit with a satellite
     orbit = f"M{cx - r * 1.32},{cy} a{r * 1.32},{r * 0.36} 0 1,0 {r * 2.64},0 a{r * 1.32},{r * 0.36} 0 1,0 {-r * 2.64},0"
     out.append(f'<g transform="rotate(-18 {cx} {cy})"><path class="f" {delay(1.2)} d="{orbit}" stroke="{t["muted"]}" stroke-width="1" stroke-dasharray="2 6"/>'
-               f'<g class="f" {delay(1.4)}><circle r="4" fill="{t["ink"]}"><animateMotion dur="9s" repeatCount="indefinite" path="{orbit}"/></circle>'
-               f'<circle r="10" stroke="{t["ink"]}" stroke-width="0.8"><animateMotion dur="9s" repeatCount="indefinite" path="{orbit}"/>'
+               f'<g class="f" {delay(1.4)}><circle r="4" fill="{t["ink"]}"><animateMotion {spin.replace(str(dur), "9")} path="{orbit}"/></circle>'
+               f'<circle r="10" stroke="{t["ink"]}" stroke-width="0.8"><animateMotion {spin.replace(str(dur), "9")} path="{orbit}"/>'
                f'<animate attributeName="r" values="5;14;5" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/></circle></g></g>')
-    out.append(f'<g class="f" {delay(1.6)} stroke="{t["muted"]}" stroke-width="0.8"><path d="M{cx} {cy} L{cx + r * 0.71:.1f} {cy - r * 0.71:.1f}"/><circle cx="{cx}" cy="{cy}" r="2" fill="{t["muted"]}"/></g>')
-    out.append(f'<g class="f" {delay(1.7)}>{mono("R 1.0 · WORLD", cx + r * 0.74, cy - r * 0.74 - 8, 11, t["muted"], spacing=1)}</g>')
+    pins = []
+    for i, (name, side, lat, lon) in enumerate(PLACES):
+        a = math.radians(lat)
+        pos, alpha = [], []
+        for l in lon0:
+            d = math.radians(lon - l)
+            z = math.cos(a) * math.cos(d) * ct + math.sin(a) * tilt  # towards the viewer
+            pos.append(f"{cx + r * math.cos(a) * math.sin(d):.1f} {cy - r * (math.sin(a) * ct - math.cos(a) * math.cos(d) * tilt):.1f}")
+            alpha.append(f"{min(1, max(0, z * 5)):.2f}")
+        tag = mono(name, 9 * side, 4, 11, t["ink"], anchor="start" if side > 0 else "end", spacing=1) if name else ""
+        pins.append(f'<g transform="translate({pos[0].replace(" ", ",")})" opacity="{alpha[0]}">'
+                    f'<animateTransform attributeName="transform" type="translate" values="{";".join(pos)}" {spin}/>'
+                    f'<animate attributeName="opacity" values="{";".join(alpha)}" {spin}/>'
+                    f'<circle r="3" fill="{t["acc"]}"/><circle r="3" stroke="{t["acc"]}" stroke-width="1">'
+                    f'<animate attributeName="r" values="3;10" dur="2.4s" begin="{i * 0.4:.1f}s" repeatCount="indefinite"/>'
+                    f'<animate attributeName="opacity" values="1;0" dur="2.4s" begin="{i * 0.4:.1f}s" repeatCount="indefinite"/></circle>{tag}</g>')
+    out.append(f'<g class="f" {delay(1.8)}>{"".join(pins)}</g>')
+    out.append(f'<g class="f" {delay(1.7)}>{mono("WHERE I'VE WORKED", cx, cy + r + 34, 11, t["muted"], anchor="middle", spacing=2)}</g>')
     return "\n".join(out)
 
 
@@ -336,7 +357,7 @@ def hero(theme):
 
 
 def button(theme, text, filled, i):
-    """Hairline key with a logo, revealed by a swipe, with an arrow that nudges every few seconds."""
+    """Hairline key with a logo, that fades in, with an arrow that nudges every few seconds."""
     t = THEMES[theme]
     size, sp, h = 15, 2, 52
     label_text = text
@@ -354,7 +375,7 @@ def button(theme, text, filled, i):
 {mono(text, 52, 31, size, color, 400, spacing=sp)}
 <g transform="translate({width - 40} 18)"><path d="M2 14 L14 2 M5 2 H14 V11" stroke="{color}" stroke-width="1.4" stroke-linecap="square">
 <animateTransform attributeName="transform" type="translate" {hop}/></path></g>"""
-    return svg(width, h, swipe(key, 4, 4, width - 8, h - 8, t["acc"], 0.4 + i * 0.15), text), width
+    return svg(width, h, reveal(key, 0.4 + i * 0.15, rise=6), text), width
 
 
 def graph(theme, calendars):
@@ -437,18 +458,19 @@ def glyph(slug, t):
         return (f'<line x1="2" y1="32" x2="62" y2="32" stroke="{muted}" stroke-width="0.8" stroke-dasharray="2 2"/>{pulses}'
                 f'<rect x="42" y="14" width="5" height="36" stroke="{ink}" stroke-width="1"/>'
                 f'<rect x="-1.5" y="-1.5" width="3" height="3" fill="{ink}"><animateMotion path="M47,32 H62" dur="1.8s" repeatCount="indefinite"/></rect>')
-    if slug == "car-price":  # a gauge settling on a price
-        times = f'keyTimes="0;0.3;0.5;0.75;1" calcMode="spline" keySplines="{";".join([EASE] * 4)}"'
-        ticks = " ".join(f"M{32 + 27 * math.cos(math.pi * (1 + k / 8)):.1f} {44 + 27 * math.sin(math.pi * (1 + k / 8)):.1f} L{32 + 31 * math.cos(math.pi * (1 + k / 8)):.1f} {44 + 31 * math.sin(math.pi * (1 + k / 8)):.1f}" for k in range(9))
-        return (f'<path d="{ticks}" stroke="{muted}" stroke-width="0.8"/><path d="M8,44 A24,24 0 0 1 56,44" stroke="{muted}" stroke-width="0.8"/>'
-                f'<line x1="32" y1="44" x2="32" y2="22" stroke="{ink}" stroke-width="1.2">'
-                f'<animateTransform attributeName="transform" type="rotate" values="-80 32 44;35 32 44;-10 32 44;70 32 44;-80 32 44" dur="5s" repeatCount="indefinite" {times}/></line>'
-                f'<circle cx="32" cy="44" r="2.5" stroke="{ink}" stroke-width="1"/>')
+    if slug == "acoustic":  # a signal that bursts as a playhead scans it
+        quiet = " ".join(f"{'M' if k == 0 else 'L'}{4 + k * 2} {32 + 2 * math.sin(k * 1.7):.1f}" for k in range(29))
+        burst = " ".join(f"{'M' if k == 0 else 'L'}{20 + k * 2} {32 + 18 * math.sin(k * 1.3) * math.sin(math.pi * k / 12):.1f}" for k in range(13))
+        times = f'keyTimes="0;0.4;0.55;0.8;1" calcMode="spline" keySplines="{";".join([EASE] * 4)}"'
+        return (f'<path d="{quiet}" stroke="{muted}" stroke-width="0.8"/>'
+                f'<path d="{burst}" stroke="{ink}" stroke-width="1.1" stroke-linejoin="round">'
+                f'<animateTransform attributeName="transform" type="matrix" values="1 0 0 0.1 0 28.8;1 0 0 0.1 0 28.8;1 0 0 1 0 0;1 0 0 0.6 0 12.8;1 0 0 0.1 0 28.8" dur="4s" repeatCount="indefinite" {times}/></path>'
+                f'<line x1="4" y1="10" x2="4" y2="54" stroke="{ink}" stroke-width="0.8"><animateTransform attributeName="transform" type="translate" values="0 0;56 0" dur="4s" repeatCount="indefinite"/></line>')
     return ""
 
 
 def card(theme, slug, eyebrow, title, text, tech, width, i, badge_text=None):
-    """Spec sheet: a swipe uncovers a hairline frame, a typed title, mono copy and a looping line drawing."""
+    """Spec sheet: a hairline frame fades in with a typed title, mono copy and a looping line drawing."""
     t = THEMES[theme]
     h, pad = 290, 40
     wide = width > 800
@@ -477,7 +499,7 @@ def card(theme, slug, eyebrow, title, text, tech, width, i, badge_text=None):
 <g transform="translate({width - pad - 34} 24)"><rect x="0.5" y="0.5" width="33" height="33" stroke="{t["faint"]}" stroke-width="1"/>
 <path d="M11 23 L23 11 M14 11 H23 V20" stroke="{t["ink"]}" stroke-width="1.2" stroke-linecap="square"><animateTransform attributeName="transform" type="translate" {hop}/></path></g>
 {badge}"""
-    body = f"""{swipe(sheet, 0, 0, width, h, t["grid"], begin, dur=0.9)}
+    body = f"""{reveal(sheet, begin, dur=1.3, rise=14)}
 {drawn}"""
     return svg(round(width), h, body, f"{title}: {text}")
 
@@ -565,7 +587,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t9"
+    v = f"{total}-t10"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
