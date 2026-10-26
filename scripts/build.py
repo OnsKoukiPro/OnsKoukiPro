@@ -64,6 +64,7 @@ WORK = [
 LINKS = [
     ("linkedin", "LinkedIn", "https://www.linkedin.com/in/ons-kouki/", True),
     ("email", "Email", "mailto:ons.koukipro@gmail.com", False),
+    ("gitlab", "GitLab", "https://gitlab.com/OnsKoukiPro", False),
 ]
 
 STACK = [
@@ -77,10 +78,10 @@ FONT_FACES = {  # weight -> (css class, family, file)
     200: ("w2", "JBMonoXL", "jbmono-200"),
     300: ("w3", "JBMonoL", "jbmono-300"),
     400: ("w4", "JBMono", "jbmono-400"),
-    "serif": ("s", "ISerif", "iserif"),
-    "italic": ("si", "ISerifItalic", "iserif-italic"),
+    "sans": ("s", "InterDisplay", "inter-display-600"),
 }
-SERIF = json.loads((FONTS / "iserif-advances.json").read_text(encoding="utf-8"))
+SANS = json.loads((FONTS / "inter-display-advances.json").read_text(encoding="utf-8"))
+TRACK = -0.025  # display tracking in em, tight like Apple's large titles
 ICONS = json.loads((ROOT / "icons" / "stack.json").read_text(encoding="utf-8"))
 FALLBACK = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 MONO = 0.6  # JetBrains Mono advance in em
@@ -116,9 +117,9 @@ def font_css(body):
                            f"src:url(data:font/woff2;base64,{data}) format('woff2')}}"
                            f".{cls}{{font-family:{family},{FALLBACK};font-weight:{weight}}}")
             else:
-                css.append(f"@font-face{{font-family:{family};src:url(data:font/woff2;base64,{data}) format('woff2')}}"
-                           f".{cls}{{font-family:{family},Georgia,serif;font-kerning:none"
-                           f"{';font-style:italic' if weight == 'italic' else ''}}}")
+                css.append(f"@font-face{{font-family:{family};font-weight:600;src:url(data:font/woff2;base64,{data}) format('woff2')}}"
+                           f".{cls}{{font-family:{family},-apple-system,system-ui,sans-serif;font-weight:600;"
+                           f"font-kerning:none;letter-spacing:{TRACK}em}}")
     return "".join(css)
 
 
@@ -195,8 +196,8 @@ def typed(text, x, y, size, color, begin, per=0.06, weight=300, spacing=0, ancho
 
 
 def headline(parts, x, y, size, t, begin, per=0.07, anchor="start", cursor="hide"):
-    """Serif headline typed one character at a time. parts: [(text, italic, color)]."""
-    advs = [SERIF["iserif-italic" if italic else "iserif"].get(ch, 0.3) * size for text, italic, _ in parts for ch in text]
+    """Display headline typed one character at a time. parts: [(text, color)]."""
+    advs = [(SANS.get(ch, 0.6) + TRACK) * size for text, _ in parts for ch in text]
     n = len(advs)
     if anchor != "start":
         x -= sum(advs) / (2 if anchor == "middle" else 1)
@@ -207,7 +208,7 @@ def headline(parts, x, y, size, t, begin, per=0.07, anchor="start", cursor="hide
     cid, dur = uid("hl"), (n + 1) * per
     keys = ";".join(f"{k / (n + 1):.4f}" for k in range(n + 1))
     timing = f'keyTimes="{keys}" calcMode="discrete" dur="{dur:.2f}s" begin="{begin:.2f}s" fill="freeze"'
-    spans = "".join(f'<tspan class="{"si" if italic else "s"}" fill="{color}">{escape(text)}</tspan>' for text, italic, color in parts)
+    spans = "".join(f'<tspan class="s" fill="{color}">{escape(text)}</tspan>' for text, color in parts)
     out = [f'<clipPath id="{cid}"><rect x="{x - size * 0.1:.1f}" y="{y - size * 1.05:.1f}" height="{size * 1.4:.1f}" width="{widths[-1] + size * 0.1:.1f}">'
            f'{HIDE.format("width", 0)}<animate attributeName="width" values="{";".join(f"{v + size * 0.1:.1f}" for v in widths)}" {timing}/></rect></clipPath>',
            f'<g clip-path="url(#{cid})"><text x="{x:.1f}" y="{y:.1f}" font-size="{size}" xml:space="preserve">{spans}</text></g>']
@@ -324,7 +325,7 @@ def hero(theme):
     fields = "  /  ".join(f.upper() for f in FIELDS)
     prompt = "~/ons $ "
     body = f"""{typed("$ whoami", x0, 46, 17, t["muted"], 0.2, per=0.07, weight=400)}
-{headline([("Ons Kouki", False, t["ink"])], x0 - 4, 178, 150, t, 1.0, per=0.09)[0]}
+{headline([("Ons Kouki", t["ink"])], x0 - 4, 178, 150, t, 1.0, per=0.09)[0]}
 {label(ROLE.upper(), x0, 238, 17, t, 2.0, t["ink"], spacing=6)}
 <g class="f" {delay(2.3)}>{mono(prompt, x0, 340, 30, t["ok"], 300)}</g>
 {typer(x0 + mono_width(prompt, 30), 340, 30, t)}
@@ -335,15 +336,22 @@ def hero(theme):
 
 
 def button(theme, text, filled, i):
-    """Hairline key, revealed by a swipe, with an arrow that nudges every few seconds."""
+    """Hairline key with a logo, revealed by a swipe, with an arrow that nudges every few seconds."""
     t = THEMES[theme]
     size, sp, h = 15, 2, 52
+    label_text = text
     text = text.upper()
-    width = round(mono_width(text, size, sp) + 84)
+    width = round(mono_width(text, size, sp) + 112)
     fill, color = (t["ink"], t["bg"]) if filled else ("none", t["ink"])
+    if label_text in ICONS:
+        icon = f'<path transform="translate(22 17) scale(0.75)" d="{ICONS[label_text]}" fill="{color}"/>'
+    else:  # envelope
+        icon = (f'<path d="M22.5 19.5 H39.5 V32.5 H22.5 Z M22.5 19.5 L31 26.5 L39.5 19.5" stroke="{color}" '
+                f'stroke-width="1.3" stroke-linejoin="round"/>')
     hop = f'values="0 0;3 -3;0 0;0 0" keyTimes="0;0.05;0.1;1" dur="5s" begin="{2 + i * 1.6:.1f}s" repeatCount="indefinite"'
     key = f"""<rect x="4.5" y="4.5" width="{width - 9}" height="{h - 9}" fill="{fill}" stroke="{t["ink"]}" stroke-width="1"/>
-{mono(text, 24, 31, size, color, 400, spacing=sp)}
+{icon}
+{mono(text, 52, 31, size, color, 400, spacing=sp)}
 <g transform="translate({width - 40} 18)"><path d="M2 14 L14 2 M5 2 H14 V11" stroke="{color}" stroke-width="1.4" stroke-linecap="square">
 <animateTransform attributeName="transform" type="translate" {hop}/></path></g>"""
     return svg(width, h, swipe(key, 4, 4, width - 8, h - 8, t["acc"], 0.4 + i * 0.15), text), width
@@ -385,10 +393,10 @@ def graph(theme, calendars):
 
 
 def heading(theme, index, name, plain, accent, note):
-    """Section index, a typed serif title with an italic accent and a hairline that runs to the edge."""
+    """Section index, a typed display title with a blue accent and a hairline that runs to the edge."""
     t = THEMES[theme]
     title = plain + accent
-    drawn, end = headline([(plain, False, t["ink"]), (accent, True, t["acc"])], -2, 100, 64, t, 0.5, per=0.055)
+    drawn, end = headline([(plain, t["ink"]), (accent, t["acc"])], -2, 100, 64, t, 0.5, per=0.055)
     body = f"""{label(f"{index} / {name}", 0, 26, 13, t, 0.05, t["acc"])}
 {drawn}
 <path class="dw" {delay(0.6 + len(title) * 0.055)} pathLength="1" d="M{end + 28:.0f} 88.5 H{W - 8}" stroke="{t["faint"]}" stroke-width="1"/>
@@ -449,8 +457,8 @@ def card(theme, slug, eyebrow, title, text, tech, width, i, badge_text=None):
     text_area = width - pad * 2 - (gsize + 60 if wide else 0)
     badge_w = mono_width(badge_text or "", 12, 2) + 40
     title_room = text_area - (badge_w + 30 if badge_text else 0) - (0 if wide else 56)
-    size = min(48, title_room / sum(SERIF["iserif"].get(ch, 0.3) for ch in title))
-    drawn, title_end = headline([(title, False, t["ink"])], pad - 2, 114, round(size, 1), t, 0.8 + i * 0.15, per=0.05)
+    size = min(48, title_room / sum(SANS.get(ch, 0.6) + TRACK for ch in title))
+    drawn, title_end = headline([(title, t["ink"])], pad - 2, 114, round(size, 1), t, 0.8 + i * 0.15, per=0.05)
     lines = wrap(text, 15, text_area)
     copy = "".join(mono(line, pad, 158 + k * 24, 15, t["muted"], 300) for k, line in enumerate(lines))
     gx, gy = (width - pad - gsize - 20, (h - gsize) / 2 + 6) if wide else (width - pad - gsize + 4, h - pad - gsize + 14)
@@ -515,7 +523,7 @@ def outro(theme):
     title = "To be continued"
     prompt = "> got a wild idea? let's build it"
     body = f"""{typed("$ echo $NEXT", W / 2, 40, 15, t["muted"], 0.2, per=0.07, weight=400, anchor="middle")}
-{headline([("To be ", False, t["ink"]), ("continued", True, t["acc"])], W / 2, 142, 92, t, 1.3, per=0.07, anchor="middle")[0]}
+{headline([("To be ", t["ink"]), ("continued", t["acc"])], W / 2, 142, 92, t, 1.3, per=0.07, anchor="middle")[0]}
 {typed(prompt, W / 2, 204, 19, t["muted"], 2.6, per=0.04, weight=300, anchor="middle", cursor="blink")}
 <g class="f" {delay(4.2)}><path d="M{W / 2 - 230} 248.5 H{W / 2 - 110} M{W / 2 + 110} 248.5 H{W / 2 + 230}" stroke="{t["faint"]}" stroke-width="1"/></g>
 {label("EN · FR · AR — EOF", W / 2, 253, 12, t, 4.0, anchor="middle")}"""
@@ -557,7 +565,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t6"
+    v = f"{total}-t7"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
