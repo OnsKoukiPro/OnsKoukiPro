@@ -87,14 +87,17 @@ MONO = 0.6  # JetBrains Mono advance in em
 
 EASE = ".65 0 .35 1"
 BASE_CSS = """
-.f { opacity: 0; animation: fade 1s ease-out forwards; }
-.dw { stroke-dasharray: 1 1; stroke-dashoffset: 1; animation: draw 1.1s cubic-bezier(.65,0,.35,1) forwards; }
+.f { animation: fade 1s ease-out both; }
+.dw { stroke-dasharray: 1 1; animation: draw 1.1s cubic-bezier(.65,0,.35,1) both; }
 .blink { animation: blink 1.1s steps(1) infinite; }
-@keyframes fade { to { opacity: 1; } }
-@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes blink { 50% { opacity: 0; } }
 """
 _ids = itertools.count()
+# Every element is drawn in its finished state; animations hide it at t=0 and reveal it later.
+# Renderers that skip SMIL (static previews, some apps) then still show the whole page.
+HIDE = '<set attributeName="{0}" to="{1}" begin="0s" fill="freeze"/>'
 
 
 def uid(prefix):
@@ -176,8 +179,8 @@ def typed(text, x, y, size, color, begin, per=0.06, weight=300, spacing=0, ancho
     widths = [k * cw + (size * 0.2 if k == n else 0) for k in range(n + 1)]
     keys = ";".join(f"{k / (n + 1):.4f}" for k in range(n + 1))
     timing = f'keyTimes="{keys}" calcMode="discrete" dur="{dur:.2f}s" begin="{begin:.2f}s" fill="freeze"'
-    out = [f'<clipPath id="{cid}"><rect x="{x - 1:.1f}" y="{y - size * 1.05:.1f}" height="{size * 1.45:.1f}" width="0">'
-           f'<animate attributeName="width" values="{";".join(f"{v:.1f}" for v in widths)}" {timing}/></rect></clipPath>',
+    out = [f'<clipPath id="{cid}"><rect x="{x - 1:.1f}" y="{y - size * 1.05:.1f}" height="{size * 1.45:.1f}" width="{widths[-1]:.1f}">'
+           f'{HIDE.format("width", 0)}<animate attributeName="width" values="{";".join(f"{v:.1f}" for v in widths)}" {timing}/></rect></clipPath>',
            f'<g clip-path="url(#{cid})">{mono(text, x, y, size, color, weight, spacing=spacing)}</g>']
     if cursor:
         gap, cw_bar = size * 0.06, max(1.5, size * 0.045)
@@ -205,8 +208,8 @@ def headline(parts, x, y, size, t, begin, per=0.07, anchor="start", cursor="hide
     keys = ";".join(f"{k / (n + 1):.4f}" for k in range(n + 1))
     timing = f'keyTimes="{keys}" calcMode="discrete" dur="{dur:.2f}s" begin="{begin:.2f}s" fill="freeze"'
     spans = "".join(f'<tspan class="{"si" if italic else "s"}" fill="{color}">{escape(text)}</tspan>' for text, italic, color in parts)
-    out = [f'<clipPath id="{cid}"><rect x="{x - size * 0.1:.1f}" y="{y - size * 1.05:.1f}" height="{size * 1.4:.1f}" width="0">'
-           f'<animate attributeName="width" values="{";".join(f"{v + size * 0.1:.1f}" for v in widths)}" {timing}/></rect></clipPath>',
+    out = [f'<clipPath id="{cid}"><rect x="{x - size * 0.1:.1f}" y="{y - size * 1.05:.1f}" height="{size * 1.4:.1f}" width="{widths[-1] + size * 0.1:.1f}">'
+           f'{HIDE.format("width", 0)}<animate attributeName="width" values="{";".join(f"{v + size * 0.1:.1f}" for v in widths)}" {timing}/></rect></clipPath>',
            f'<g clip-path="url(#{cid})"><text x="{x:.1f}" y="{y:.1f}" font-size="{size}" xml:space="preserve">{spans}</text></g>']
     if cursor:
         end = begin + dur
@@ -222,7 +225,7 @@ def headline(parts, x, y, size, t, begin, per=0.07, anchor="start", cursor="hide
 def swipe(content, x, y, w, h, color, begin, dur=0.8):
     """A bar sweeps in from the left, uncovers the content and leaves to the right."""
     timing = f'keyTimes="0;0.5;1" calcMode="spline" keySplines="{EASE};{EASE}" dur="{dur}s" begin="{begin:.2f}s" fill="freeze"'
-    return (f'<g opacity="0">{content}<set attributeName="opacity" to="1" begin="{begin + dur / 2:.2f}s" fill="freeze"/></g>'
+    return (f'<g>{content}{HIDE.format("opacity", 0)}<set attributeName="opacity" to="1" begin="{begin + dur / 2:.2f}s" fill="freeze"/></g>'
             f'<rect x="{x:.1f}" y="{y:.1f}" width="0" height="{h:.1f}" fill="{color}">'
             f'<animate attributeName="width" values="0;{w:.1f};0" {timing}/>'
             f'<animate attributeName="x" values="{x:.1f};{x:.1f};{x + w:.1f}" {timing}/></rect>')
@@ -246,9 +249,9 @@ def top(theme, total, since):
     body = f"""{label("ONS.KOUKI", 0, 24, 14, t, 0.1, t["ink"])}
 {label(f"{total:,} CONTRIBUTIONS · SINCE {since}", W / 2, 24, 13, t, 0.3, anchor="middle")}
 {label("README.MD", W, 24, 13, t, 0.5, anchor="end")}
-<circle cx="{W - rw - 16:.1f}" cy="19.5" r="3.5" fill="{t["ok"]}" opacity="0"><set attributeName="opacity" to="1" begin="0.9s" fill="freeze"/>
+<circle cx="{W - rw - 16:.1f}" cy="19.5" r="3.5" fill="{t["ok"]}">{HIDE.format("opacity", 0)}<set attributeName="opacity" to="1" begin="0.9s" fill="freeze"/>
 <animate attributeName="opacity" values="1;0.15;1" dur="2s" begin="0.9s" repeatCount="indefinite"/></circle>
-<clipPath id="reveal"><rect width="0" height="70"><animate attributeName="width" from="0" to="{W}" dur="1.6s" begin="0.2s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="{EASE}"/></rect></clipPath>
+<clipPath id="reveal"><rect width="{W}" height="70">{HIDE.format("width", 0)}<animate attributeName="width" from="0" to="{W}" dur="1.6s" begin="0.2s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="{EASE}"/></rect></clipPath>
 <g clip-path="url(#reveal)" stroke="{t["faint"]}" stroke-width="1"><path d="{" ".join(ticks)}"/><path d="M0 56.5 H{W}"/></g>"""
     return svg(W, 58, body, f"Ons Kouki · {total} contributions since {since}")
 
@@ -287,7 +290,8 @@ def typer(x, y, size, t, start=2.6, cycle=2.8):
         times = [0] + steps[1:] + [cycle - 0.35, cycle - 0.34]
         widths = [0] + [k * cw for k in range(1, len(word) + 1)] + [len(word) * cw, 0]
         key = ";".join(f"{v / total:.4f}" for v in times + [total])
-        clips.append(f'<clipPath id="tw{i}"><rect x="{x}" y="{y - size}" height="{size * 1.4}" width="0">'
+        base = f'width="{len(word) * cw:.1f}">{HIDE.format("width", 0)}' if i == 0 else 'width="0">'
+        clips.append(f'<clipPath id="tw{i}"><rect x="{x}" y="{y - size}" height="{size * 1.4}" {base}'
                      f'<animate attributeName="width" values="{";".join(f"{v:.1f}" for v in widths + [0])}" keyTimes="{key}" calcMode="discrete" '
                      f'dur="{total}s" begin="{start + i * cycle:.2f}s" repeatCount="indefinite"/></rect></clipPath>')
         texts.append(f'<g clip-path="url(#tw{i})">{mono(word, x, y, size, t["ink"], 300)}</g>')
@@ -371,7 +375,7 @@ def graph(theme, calendars):
                      f'{mono(str(year), x0, gy + 7 * step + 30, 12, t["muted"], spacing=1.5)}')
     height = gy + 7 * step + 38
     # the grid is wiped in left to right, then a thin scan line keeps passing over it
-    out.append(f'<clipPath id="gw"><rect y="0" height="{height:.0f}" width="0"><animate attributeName="width" values="0;{W}" dur="2.2s" begin="0.3s" '
+    out.append(f'<clipPath id="gw"><rect y="0" height="{height:.0f}" width="{W}">{HIDE.format("width", 0)}<animate attributeName="width" values="0;{W}" dur="2.2s" begin="0.3s" '
                f'fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="{EASE}"/></rect></clipPath><g clip-path="url(#gw)">{"".join(cells)}</g>')
     out.append(f'<g><path d="M0 {gy - 6} V{gy + 7 * step + 4:.1f}" stroke="{t["acc"]}" stroke-width="1.2" opacity="0.7"/>'
                f'<animateTransform attributeName="transform" type="translate" values="-10 0;{W + 10} 0" dur="8s" begin="2.6s" repeatCount="indefinite"/></g>')
@@ -553,7 +557,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t2"
+    v = f"{total}-t3"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
