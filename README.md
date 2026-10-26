@@ -22,4 +22,4 @@ Software engineer working across **ML, data pipelines and cloud infrastructure**
 
 ## Contact
 
-[GitHub](https://github.com/OnsKoukiPro)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-ons--kouki-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ons-kouki/)
