@@ -558,7 +558,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t4"
+    v = f"{total}-t5"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
