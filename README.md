@@ -7,16 +7,6 @@ I build AI-driven products, cloud-native applications, data pipelines and automa
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-ons--kouki-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ons-kouki/)
 [![Email](https://img.shields.io/badge/Email-ons.koukipro%40gmail.com-D14836?logo=gmail&logoColor=white)](mailto:ons.koukipro@gmail.com)
 
-## Experience
-
-- **Platform Software Engineer (Master's thesis)**, ACCURE Battery Intelligence, Aachen · 2026: platform services for battery-storage (BESS) customer onboarding. React, TypeScript, Django, Kubernetes on AWS EKS, Helm, Argo CD, Pulumi
-- **Founding AI/ML Engineer**, Clarity Chain AS, Oslo · 2025–26: probabilistic price forecasting, hedging optimisation, and an LLM document-analysis agent built on RAG ([ClarityChains](https://github.com/OnsKoukiPro/ClarityChains))
-- **AI/ML R&D Intern**, Bridges For Fairness, Windsbach · 2025: ML/DL models (RF, CNN, RNN, DBN) that predict material failure from acoustic-emission data
-- **Network Solutions & Design Intern**, Omantel, Muscat · 2025: access and core network planning (GPON, DWDM, IMS, 4G/5G)
-- **DevSecOps Engineer (working student)**, Speedykom, Erlangen · 2024–25: open-source [Regional Pandemic Analytics](https://github.com/OnsKoukiPro/Regional-Pandemic-Analytics) platform for IGAD. Airflow, Druid, Superset, Keycloak, Vault, Kubernetes, GitHub Actions
-
-**Education:** Engineering degree (Master's-equivalent), Network & Telecommunications, INSAT Tunis, top 20%
-
 ## Featured projects
 
 | Project | What it is | Stack |
