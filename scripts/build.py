@@ -78,7 +78,7 @@ FONT_FACES = {  # weight -> (css class, family, file)
     200: ("w2", "JBMonoXL", "jbmono-200"),
     300: ("w3", "JBMonoL", "jbmono-300"),
     400: ("w4", "JBMono", "jbmono-400"),
-    "sans": ("s", "InterDisplay", "inter-display-600"),
+    "sans": ("s", "InterDisplay", "inter-display-500"),
 }
 SANS = json.loads((FONTS / "inter-display-advances.json").read_text(encoding="utf-8"))
 TRACK = -0.025  # display tracking in em, tight like Apple's large titles
@@ -117,8 +117,8 @@ def font_css(body):
                            f"src:url(data:font/woff2;base64,{data}) format('woff2')}}"
                            f".{cls}{{font-family:{family},{FALLBACK};font-weight:{weight}}}")
             else:
-                css.append(f"@font-face{{font-family:{family};font-weight:600;src:url(data:font/woff2;base64,{data}) format('woff2')}}"
-                           f".{cls}{{font-family:{family},-apple-system,system-ui,sans-serif;font-weight:600;"
+                css.append(f"@font-face{{font-family:{family};font-weight:500;src:url(data:font/woff2;base64,{data}) format('woff2')}}"
+                           f".{cls}{{font-family:{family},-apple-system,system-ui,sans-serif;font-weight:500;"
                            f"font-kerning:none;letter-spacing:{TRACK}em}}")
     return "".join(css)
 
@@ -565,7 +565,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t7"
+    v = f"{total}-t8"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
