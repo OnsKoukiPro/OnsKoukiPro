@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 56" width="1200" height="56" fill="none" role="img" aria-label="Ons Kouki · 666 contributions since 2022">
+<defs>
+  <linearGradient id="shine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="300" y2="0">
+    <stop offset="0" stop-color="#a78bfa"/><stop offset="0.45" stop-color="#a78bfa"/>
+    <stop offset="0.5" stop-color="#e6edf3" stop-opacity="0.9"/>
+    <stop offset="0.55" stop-color="#a78bfa"/><stop offset="1" stop-color="#a78bfa"/>
+    <animateTransform attributeName="gradientTransform" type="translate" values="-400 0;1200 0;1200 0" keyTimes="0;0.25;1" dur="12s" repeatCount="indefinite"/>
+  </linearGradient>
+</defs>
+<style>
+.f { opacity: 0; animation: fade 1.4s ease-out forwards; }
+@keyframes fade { to { opacity: 1; } }
+</style>
+<text class="f" style="animation-delay:0.20s" x="0" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="22" font-weight="600" fill="#e6edf3">Ons Kouki</text>
+<text class="f" style="animation-delay:0.50s" x="600.0" y="28" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="22" font-weight="600" fill="#8b949e"><tspan fill="url(#shine)">666</tspan> contributions since 2022</text>
+<text class="f" style="animation-delay:0.80s" x="1200" y="28" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" fill="#8b949e">readme.md</text>
+<line class="f" style="animation-delay:0.80s" x1="0" y1="50" x2="1200" y2="50" stroke="#30363d"/>
+</svg>

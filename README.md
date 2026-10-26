@@ -1,51 +1,22 @@
-<img src="assets/hero.svg" width="100%" alt="Ons Kouki, creative technologist. Idea, design, build, data, train, deploy, observe."/>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/top-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/top-light.svg?v=2026-10-26" alt="Ons Kouki · 666 contributions" width="100%"></picture>
 
-<p align="center">
-  <a href="https://www.linkedin.com/in/ons-kouki/"><img src="https://img.shields.io/badge/LinkedIn-ons--kouki-7f5af0?style=for-the-badge&logo=linkedin&logoColor=white&labelColor=0b0d17" alt="LinkedIn"/></a>
-  <a href="mailto:ons.koukipro@gmail.com"><img src="https://img.shields.io/badge/Email-say%20hi-22d3ee?style=for-the-badge&logo=gmail&logoColor=white&labelColor=0b0d17" alt="Email"/></a>
-  <img src="https://komarev.com/ghpvc/?username=OnsKoukiPro&style=for-the-badge&color=f472b6&label=Visitors" alt="Visitors"/>
-</p>
+<a href="https://www.linkedin.com/in/ons-kouki/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/link-linkedin-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/link-linkedin-light.svg?v=2026-10-26" alt="LinkedIn" width="101"></picture></a>
+<a href="mailto:ons.koukipro@gmail.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/link-email-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/link-email-light.svg?v=2026-10-26" alt="Email" width="74"></picture></a>
+<a href="https://clarity-chains.vercel.app"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/link-demo-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/link-demo-light.svg?v=2026-10-26" alt="Live demo" width="110"></picture></a>
 
-<p align="center"><i>I don't stay in one lane. I take an idea from a napkin sketch to a running cluster, and I like owning every step in between.</i></p>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/main-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/main-light.svg?v=2026-10-26" alt="I'm Ons. A creative technologist who takes ideas from a napkin sketch to a running cluster. I dream it, design it, build it, teach it to think, and ship it." width="100%"></picture>
 
-## 📖 The story so far
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/story-title-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/story-title-light.svg?v=2026-10-26" alt="The story so far" width="100%"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/story-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/story-light.svg?v=2026-10-26" alt="packets: An RL agent that fights DDoS floods inside an SDN controller; traps: A Kubernetes honeynet, then DevSecOps on a pandemic analytics platform; fibre: Planning GPON, DWDM and 5G networks at Omantel; signals: Acoustic-emission failure prediction with CNNs and RNNs; startup: Founding AI/ML engineer at Clarity Chain, idea to live product; energy: Platform services for battery storage at ACCURE, on EKS" width="100%"></picture>
 
-<img src="assets/journey.svg" width="100%" alt="Journey: network kid, DevSecOps at Speedykom, fibre and 5G at Omantel, ML R&D at Bridges For Fairness, founding AI/ML at Clarity Chain, platform and thesis at ACCURE"/>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-title-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-title-light.svg?v=2026-10-26" alt="Things I've made" width="100%"></picture>
+<a href="https://clarity-chains.vercel.app"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-claritychains-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-claritychains-light.svg?v=2026-10-26" alt="ClarityChains: LLM agents that read supplier offers and pick a winner" width="100%"></picture></a>
+<a href="https://github.com/OnsKoukiPro/claritychains-model"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-model-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-model-light.svg?v=2026-10-26" alt="claritychains-model: Price forecasts and hedging for battery metals" width="100%"></picture></a>
+<a href="https://github.com/OnsKoukiPro/Honeypot-CK8s"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-honeypot-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-honeypot-light.svg?v=2026-10-26" alt="Honeypot-CK8s: A honeynet in a vCluster. Attackers get in, I get dashboards" width="100%"></picture></a>
+<a href="https://github.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-rl-ddos-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-rl-ddos-light.svg?v=2026-10-26" alt="RL × SDN: A network that learns when to block a flood (94.6%)" width="100%"></picture></a>
+<a href="https://github.com/OnsKoukiPro/ML-Car-Price-Prediction"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-car-price-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/work-car-price-light.svg?v=2026-10-26" alt="Car Price ML: Scraped four marketplaces to price a used car (R² 0.75)" width="100%"></picture></a>
 
-**01 · It started with packets 📡**<br/>
-I trained as a network and telecom engineer, so my first obsession was how data travels. I taught an SDN controller to [spot DDoS floods and fight back with reinforcement learning](https://github.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks), and later helped plan fibre and 5G networks at Omantel.
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/stack-title-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/stack-title-light.svg?v=2026-10-26" alt="Toolbox" width="100%"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/stack-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/stack-light.svg?v=2026-10-26" alt="ml &amp; data: pytorch, tensorflow, scikit-learn, langchain, pandas, airflow; backend: python, fastapi, django, node / nestjs, spring, postgres; cloud &amp; security: aws · azure, kubernetes, terraform · pulumi, argo cd · helm, vault · keycloak; frontend: typescript, react, next.js, angular, tailwind" width="100%"></picture>
 
-**02 · Then I wanted to meet the attackers 🍯**<br/>
-So I built them a trap: a [Kubernetes honeynet](https://github.com/OnsKoukiPro/Honeypot-CK8s) that streams every move into live dashboards. At Speedykom I secured and automated an [open-source pandemic analytics platform](https://github.com/OnsKoukiPro/Regional-Pandemic-Analytics) with Kubernetes, Vault, Keycloak and GitHub Actions.
-
-**03 · Then the data started talking 🎧**<br/>
-At Bridges For Fairness I trained CNNs and RNNs on acoustic-emission signals to predict failure before it happens. For fun, I [scraped four car marketplaces](https://github.com/OnsKoukiPro/ML-Car-Price-Prediction) to find out what a used car is really worth.
-
-**04 · Then I built a startup's brain from zero 🧠**<br/>
-As founding AI/ML engineer at Clarity Chain I took one idea all the way: battery-metal price forecasts, hedging, and an LLM agent that reads supplier offers and tells you who to pick.
-
-**05 · Now: powering the energy transition 🔋**<br/>
-Master's thesis at ACCURE Battery Intelligence, building platform services for battery-storage customers on AWS EKS with Helm, Argo CD and Pulumi.
-
-## 🚀 Things I've made
-
-<a href="https://github.com/OnsKoukiPro/ClarityChains"><img src="assets/card-claritychains.svg" width="100%" alt="ClarityChains: LLM agents that read supplier offers, flag the traps and pick a winner"/></a>
-<p align="center"><a href="https://clarity-chains.vercel.app"><b>▶ try the live demo</b></a></p>
-
-<p align="center">
-  <a href="https://github.com/OnsKoukiPro/claritychains-model"><img src="assets/card-model.svg" width="49%" alt="claritychains-model: price forecasts and a hedging optimiser for lithium, cobalt and nickel"/></a>
-  <a href="https://github.com/OnsKoukiPro/Honeypot-CK8s"><img src="assets/card-honeypot.svg" width="49%" alt="Honeypot-CK8s: a honeynet inside a vCluster with live dashboards"/></a>
-  <a href="https://github.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks"><img src="assets/card-rl-ddos.svg" width="49%" alt="RL x SDN DDoS mitigation: 94.6% detection baseline"/></a>
-  <a href="https://github.com/OnsKoukiPro/ML-Car-Price-Prediction"><img src="assets/card-car-price.svg" width="49%" alt="Used car price prediction: R² 0.75"/></a>
-</p>
-
-## 🧰 My toolbox
-
-<p align="center">
-  <img src="https://skillicons.dev/icons?i=py,ts,java,react,nextjs,angular,nodejs,nestjs,django,fastapi,spring&perline=11" alt="Languages and frameworks"/><br/>
-  <img src="https://skillicons.dev/icons?i=pytorch,tensorflow,sklearn,aws,azure,kubernetes,docker,terraform,ansible,githubactions,postgres,mongodb,grafana,prometheus,linux&perline=15" alt="ML, cloud and data tools"/>
-</p>
-
-<p align="center">🗣️ English · French · Arabic</p>
-
-<a href="https://www.linkedin.com/in/ons-kouki/"><img src="assets/footer.svg" width="100%" alt="To be continued. Got a wild idea? Let's build it."/></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/outro-dark.svg?v=2026-10-26"><img src="https://raw.githubusercontent.com/OnsKoukiPro/OnsKoukiPro/main/assets/outro-light.svg?v=2026-10-26" alt="To be continued" width="100%"></picture>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 52" width="1200" height="52" fill="none" role="img" aria-label="claritychains-model: Price forecasts and hedging for battery metals">
+<defs>
+  <linearGradient id="shine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="300" y2="0">
+    <stop offset="0" stop-color="#6d28d9"/><stop offset="0.45" stop-color="#6d28d9"/>
+    <stop offset="0.5" stop-color="#1f2328" stop-opacity="0.9"/>
+    <stop offset="0.55" stop-color="#6d28d9"/><stop offset="1" stop-color="#6d28d9"/>
+    <animateTransform attributeName="gradientTransform" type="translate" values="-400 0;1200 0;1200 0" keyTimes="0;0.25;1" dur="12s" repeatCount="indefinite"/>
+  </linearGradient>
+</defs>
+<style>
+.f { opacity: 0; animation: fade 1.4s ease-out forwards; }
+@keyframes fade { to { opacity: 1; } }
+</style>
+<g class="f" style="animation-delay:0.85s">
+<text x="0" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="22" font-weight="600" fill="url(#shine)">claritychains-model<tspan dx="6" font-size="16" font-weight="400" fill="#6d28d9">↗<animate attributeName="dx" values="6;10;6;6" keyTimes="0;0.05;0.1;1" dur="5s" begin="4.3s" repeatCount="indefinite"/><animate attributeName="dy" values="-2;-6;-2;-2" keyTimes="0;0.05;0.1;1" dur="5s" begin="4.3s" repeatCount="indefinite"/></tspan></text>
+<text x="300" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="22" fill="#1f2328">Price forecasts and hedging for battery metals</text>
+<text x="1200" y="32" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" fill="#656d76">python · streamlit · scipy</text>
+<line x1="0" y1="50" x2="1200" y2="50" stroke="#d0d7de"/>
+</g>
+</svg>

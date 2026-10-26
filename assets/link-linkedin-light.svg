@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 34" width="144" height="34" fill="none" role="img" aria-label="LinkedIn">
+<defs>
+  <linearGradient id="shine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="300" y2="0">
+    <stop offset="0" stop-color="#6d28d9"/><stop offset="0.45" stop-color="#6d28d9"/>
+    <stop offset="0.5" stop-color="#1f2328" stop-opacity="0.9"/>
+    <stop offset="0.55" stop-color="#6d28d9"/><stop offset="1" stop-color="#6d28d9"/>
+    <animateTransform attributeName="gradientTransform" type="translate" values="-400 0;144 0;144 0" keyTimes="0;0.25;1" dur="12s" repeatCount="indefinite"/>
+  </linearGradient>
+</defs>
+<style>
+.f { opacity: 0; animation: fade 1.4s ease-out forwards; }
+@keyframes fade { to { opacity: 1; } }
+</style>
+<g class="f" style="animation-delay:1.00s">
+<text x="0" y="26" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="24" font-weight="600" fill="url(#shine)">LinkedIn<tspan dx="6" font-size="18" font-weight="400" fill="#6d28d9">↗<animate attributeName="dx" values="6;10;6;6" keyTimes="0;0.05;0.1;1" dur="5s" begin="2.0s" repeatCount="indefinite"/><animate attributeName="dy" values="-2;-6;-2;-2" keyTimes="0;0.05;0.1;1" dur="5s" begin="2.0s" repeatCount="indefinite"/></tspan></text>
+</g>
+</svg>
