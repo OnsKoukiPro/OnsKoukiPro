@@ -523,9 +523,8 @@ def outro(theme):
 
 
 def picture(name, alt, version, width="100%"):
-    # GitHub hides each copy according to the viewer's GitHub theme, not the OS one like <picture> would
-    return "".join(f'<img src="{RAW}/{name}-{theme}.svg?v={version}#gh-{theme}-mode-only" alt="{escape(alt)}" width="{width}">'
-                   for theme in THEMES)
+    return (f'<picture><source media="(prefers-color-scheme: dark)" srcset="{RAW}/{name}-dark.svg?v={version}">'
+            f'<img src="{RAW}/{name}-light.svg?v={version}" alt="{escape(alt)}" width="{width}"></picture>')
 
 
 def build():
@@ -558,7 +557,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t5"
+    v = f"{total}-t6"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
