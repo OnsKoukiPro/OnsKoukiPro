@@ -1,11 +1,13 @@
-"""Build the profile README and its animated SVGs (light + dark).
+"""Build the profile README and its animated line-art SVGs (light + dark).
 
 Usage: python scripts/build.py
 Fetches the public contribution calendar, writes assets/*.svg and README.md.
-Fonts in fonts/ are pre-subset Inter woff2 files (SIL OFL) embedded into each SVG.
+Headlines are drawn stroke by stroke from Relief SingleLine (a single-line plotter font, SIL OFL),
+stored as path data in fonts/relief-singleline.json. Everything else is set in JetBrains Mono (SIL OFL).
 """
 import base64
 import datetime as dt
+import json
 import math
 import re
 import urllib.request
@@ -20,18 +22,15 @@ RAW = f"https://raw.githubusercontent.com/{USER}/{USER}/main/assets"
 W = 1200
 
 THEMES = {
-    "light": {"text": "#1d1d1f", "muted": "#6e6e73", "line": "#d2d2d7", "card": "#f5f5f7", "accent": "#0071e3",
-              "on_accent": "#ffffff", "grad": ["#2563eb", "#7c3aed", "#db2777"], "glow": 0.22,
-              "dots": ["#ebebf0", "#c7d7fe", "#8fb0fb", "#4f7ef7", "#1d4fd8"]},
-    "dark": {"text": "#f5f5f7", "muted": "#86868b", "line": "#3a3a3c", "card": "#1c1c1e", "accent": "#2997ff",
-             "on_accent": "#ffffff", "grad": ["#60a5fa", "#a78bfa", "#f472b6"], "glow": 0.3,
-             "dots": ["#1c1c1e", "#1e3a8a", "#1d4ed8", "#3b82f6", "#93c5fd"]},
+    "light": {"ink": "#0f1115", "muted": "#6b7280", "faint": "#d0d4da", "grid": "#e3e6ea", "bg": "#ffffff",
+              "acc": "#ff4f1f", "live": "#16a34a"},
+    "dark": {"ink": "#e6edf3", "muted": "#8b949e", "faint": "#30363d", "grid": "#1f252d", "bg": "#0d1117",
+             "acc": "#ff6a3d", "live": "#3fb950"},
 }
 
-EYEBROW = "Creative Technologist"
-TAGLINE = "Idea to production."
-WORDS = ["Dream it.", "Design it.", "Build it.", "Train it.", "Ship it.", "Scale it."]
-FIELDS = "AI/ML  ·  Software Engineering  ·  Cloud Infrastructure"
+ROLE = "Creative Technologist"
+WORDS = ["dream it", "design it", "build it", "train it", "ship it", "scale it"]
+FIELDS = ["AI/ML", "Software Engineering", "Cloud Infrastructure"]
 
 FEATURED = ("claritychains", "AI · PROCUREMENT", "ClarityChains",
             "LLM agents that read supplier offers, flag the traps and pick a winner. "
@@ -49,7 +48,7 @@ WORK = [
      "Ryu · Mininet · TensorFlow",
      f"https://github.com/{USER}/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks"),
     ("car-price", "MACHINE LEARNING", "Car Price ML",
-     "Scraped four marketplaces to price a used car. R² 0.75.",
+     "Scraped 4 marketplaces to price a used car. R² 0.75.",
      "BeautifulSoup · pandas · scikit-learn", f"https://github.com/{USER}/ML-Car-Price-Prediction"),
 ]
 
@@ -67,21 +66,21 @@ STACK = [
 ]
 
 FONT_FACES = {  # css class -> (family, weight, file)
-    "r": ("Inter", 400, "inter-400"),
-    "md": ("InterMedium", 500, "inter-500"),
-    "sb": ("InterSemibold", 600, "inter-600"),
-    "b": ("InterDisplay", 700, "inter-display-700"),
+    "m": ("JBMono", 400, "jbmono-400"),
+    "mb": ("JBMonoBold", 700, "jbmono-700"),
 }
-FALLBACK = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif"
-# average glyph advance in em, used to size pills and wrap text
-ADVANCE = {"r": 0.52, "md": 0.54, "sb": 0.56, "b": 0.58}
+FALLBACK = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+MONO = 0.6  # JetBrains Mono advance in em
+LINE_GLYPHS = json.loads((FONTS / "relief-singleline.json").read_text(encoding="utf-8"))
 
-EASE = ".45 0 .55 1"
+EASE = ".65 0 .35 1"
 BASE_CSS = """
-.f { opacity: 0; animation: fade 1.2s ease-out forwards; }
-.u { opacity: 0; animation: up 1.2s cubic-bezier(.16,1,.3,1) forwards; }
+.f { opacity: 0; animation: fade 1s ease-out forwards; }
+.dw { stroke-dasharray: 1 1; stroke-dashoffset: 1; animation: draw 1.1s cubic-bezier(.65,0,.35,1) forwards; }
+.blink { animation: blink 1.1s steps(1) infinite; }
 @keyframes fade { to { opacity: 1; } }
-@keyframes up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes blink { 50% { opacity: 0; } }
 """
 
 
@@ -110,17 +109,8 @@ def fetch_calendar(year):
     return levels, total
 
 
-def svg(width, height, theme, body, label, css=""):
-    t = THEMES[theme]
-    g0, g1, g2 = t["grad"]
+def svg(width, height, body, label, css=""):
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" fill="none" role="img" aria-label="{escape(label)}">
-<defs>
-  <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="{g0}"/><stop offset="0.5" stop-color="{g1}"/><stop offset="1" stop-color="{g2}"/>
-  </linearGradient>
-  <radialGradient id="glowA"><stop offset="0" stop-color="{g0}" stop-opacity="{t['glow']}"/><stop offset="1" stop-color="{g0}" stop-opacity="0"/></radialGradient>
-  <radialGradient id="glowB"><stop offset="0" stop-color="{g2}" stop-opacity="{t['glow'] * 0.8:.2f}"/><stop offset="1" stop-color="{g2}" stop-opacity="0"/></radialGradient>
-</defs>
 <style>{font_css(body)}{BASE_CSS}{css}</style>
 {body}
 </svg>
@@ -131,15 +121,22 @@ def delay(s):
     return f'style="animation-delay:{s:.2f}s"'
 
 
-def text_width(text, size, cls):
-    return len(text) * size * ADVANCE[cls]
+def mono(text, x, y, size, fill, bold=False, anchor="start", spacing=0, extra=""):
+    cls = "mb" if bold else "m"
+    ls = f' letter-spacing="{spacing}"' if spacing else ""
+    return (f'<text class="{cls}{" " + extra if extra else ""}" x="{x:.1f}" y="{y:.1f}" font-size="{size}"{ls} '
+            f'text-anchor="{anchor}" fill="{fill}" xml:space="preserve">{escape(text)}</text>')
 
 
-def wrap(text, size, width, cls="r"):
-    lines, line = [], ""
+def mono_width(text, size, spacing=0):
+    return len(text) * (size * MONO + spacing)
+
+
+def wrap(text, size, width):
+    lines, line, limit = [], "", int(width // (size * MONO))
     for word in text.split():
         candidate = f"{line} {word}".strip()
-        if text_width(candidate, size, cls) > width and line:
+        if len(candidate) > limit and line:
             lines.append(line)
             line = word
         else:
@@ -147,67 +144,175 @@ def wrap(text, size, width, cls="r"):
     return lines + [line]
 
 
-def glow(cx, cy, rx, ry, which, dx, dur):
-    """A soft radial light that drifts slowly. No blur filter, so no hard edges."""
-    return (f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="url(#{which})">'
-            f'<animateTransform attributeName="transform" type="translate" values="0 0;{dx} {dx // 4};0 0" dur="{dur}s" '
-            f'repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="{EASE};{EASE}"/></ellipse>')
+def line_width(text, size, track=0):
+    return sum(LINE_GLYPHS.get(c, [280])[0] for c in text) * size / 1000 + track * (len(text) - 1)
+
+
+def line_text(text, x, y, size, color, stroke=2.4, start=0.0, per=0.07, anchor="start", track=0):
+    """Plotter lettering: each glyph is one open stroke that draws itself, left to right."""
+    s = size / 1000
+    if anchor != "start":
+        x -= line_width(text, size, track) / (2 if anchor == "middle" else 1)
+    paths, k = [], 0
+    for ch in text:
+        adv, d = LINE_GLYPHS.get(ch, [280, ""])
+        if d:
+            paths.append(f'<path class="dw" style="animation-delay:{start + k * per:.2f}s" pathLength="1" d="{d}" '
+                         f'transform="translate({x:.1f} {y:.1f}) scale({s:.4f} {-s:.4f})" stroke-width="{stroke / s:.1f}"/>')
+            k += 1
+        x += adv * s + track
+    return (f'<g stroke="{color}" stroke-linecap="round" stroke-linejoin="round">{"".join(paths)}</g>', x)
+
+
+def crop_marks(t, w, h, inset=10, arm=16):
+    """Registration corners like on a print proof."""
+    out = []
+    for cx, sx in ((inset, 1), (w - inset, -1)):
+        for cy, sy in ((inset, 1), (h - inset, -1)):
+            out.append(f"M{cx} {cy + sy * arm} V{cy} H{cx + sx * arm}")
+    return f'<path class="f" d="{" ".join(out)}" stroke="{t["muted"]}" stroke-width="1.4"/>'
+
+
+def crosshair(x, y, t, r=7):
+    return (f'<g class="f" {delay(0.6)} stroke="{t["muted"]}" stroke-width="1"><path d="M{x - r * 1.8} {y} H{x + r * 1.8} M{x} {y - r * 1.8} V{y + r * 1.8}"/>'
+            f'<circle cx="{x}" cy="{y}" r="{r}"/></g>')
+
+
+def dot_grid(t, w, h, step=24):
+    return (f'<defs><pattern id="grid" width="{step}" height="{step}" patternUnits="userSpaceOnUse">'
+            f'<circle cx="{step / 2}" cy="{step / 2}" r="1.1" fill="{t["grid"]}"/></pattern></defs>'
+            f'<rect class="f" width="{w}" height="{h}" fill="url(#grid)"/>')
 
 
 def top(theme, total, since):
     t = THEMES[theme]
-    body = f"""<text class="sb f" {delay(0.1)} x="0" y="30" font-size="22" letter-spacing="-0.3" fill="{t['text']}">Ons Kouki</text>
-<text class="r f" {delay(0.3)} x="{W / 2}" y="30" text-anchor="middle" font-size="19" fill="{t['muted']}"><tspan class="sb" fill="{t['text']}">{total:,}</tspan> contributions since {since}</text>
-<text class="r f" {delay(0.5)} x="{W}" y="30" text-anchor="end" font-size="19" fill="{t['muted']}">readme.md</text>
-<line class="f" {delay(0.5)} x1="0" y1="52.5" x2="{W}" y2="52.5" stroke="{t['line']}"/>"""
-    return svg(W, 56, theme, body, f"Ons Kouki · {total} contributions since {since}")
+    ticks = []
+    for i, x in enumerate(range(0, W + 1, 12)):
+        h = 12 if x % 120 == 0 else 7 if x % 60 == 0 else 4
+        ticks.append(f"M{min(max(x, 0.75), W - 0.75)} 62 V{62 - h}")
+    body = f"""{mono("ONS.KOUKI", 0, 26, 16, t["ink"], bold=True, spacing=2, extra="f")}
+<g class="f" {delay(0.2)}>{mono(f"{total:,} CONTRIBUTIONS · SINCE {since}", W / 2, 26, 14, t["muted"], anchor="middle", spacing=1.5)}</g>
+<g class="f" {delay(0.3)}><circle cx="{W - mono_width("README.MD", 14, 1.5) - 18}" cy="21" r="4" fill="{t["acc"]}" class="blink"/>{mono("README.MD", W, 26, 14, t["muted"], anchor="end", spacing=1.5)}</g>
+<clipPath id="reveal"><rect width="0" height="70"><animate attributeName="width" from="0" to="{W}" dur="1.6s" begin="0.2s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="{EASE}"/></rect></clipPath>
+<g clip-path="url(#reveal)" stroke="{t["faint"]}" stroke-width="1.5"><path d="{" ".join(ticks)}"/><path d="M0 62.25 H{W}"/></g>"""
+    return svg(W, 64, body, f"Ons Kouki · {total} contributions since {since}")
+
+
+def globe(cx, cy, r, t):
+    """Wireframe globe: latitude rings stay put, meridians breathe to fake a rotation."""
+    out = [f'<circle class="dw" {delay(0.4)} pathLength="1" cx="{cx}" cy="{cy}" r="{r}" stroke="{t["ink"]}" stroke-width="1.6"/>']
+    for k, lat in enumerate((-60, -30, 0, 30, 60)):
+        a = math.radians(lat)
+        rx = r * math.cos(a)
+        out.append(f'<ellipse class="dw" {delay(0.6 + k * 0.08)} pathLength="1" cx="{cx}" cy="{cy + r * math.sin(a):.1f}" rx="{rx:.1f}" ry="{rx * 0.16:.1f}" '
+                   f'stroke="{t["muted"]}" stroke-width="1"/>')
+    samples, n = 24, 6
+    for m in range(n):
+        phase = math.pi * m / n
+        vals = ";".join(f"{r * abs(math.sin(phase + math.pi * s / samples)):.1f}" for s in range(samples + 1))
+        out.append(f'<ellipse class="f" {delay(1.0)} cx="{cx}" cy="{cy}" ry="{r}" rx="{r * abs(math.sin(phase)):.1f}" stroke="{t["muted"]}" stroke-width="1">'
+                   f'<animate attributeName="rx" values="{vals}" dur="16s" repeatCount="indefinite"/></ellipse>')
+    # tilted orbit with a satellite
+    orbit = f"M{cx - r * 1.32},{cy} a{r * 1.32},{r * 0.36} 0 1,0 {r * 2.64},0 a{r * 1.32},{r * 0.36} 0 1,0 {-r * 2.64},0"
+    out.append(f'<g transform="rotate(-18 {cx} {cy})"><path class="f" {delay(1.2)} d="{orbit}" stroke="{t["acc"]}" stroke-width="1.2" stroke-dasharray="2 6"/>'
+               f'<g class="f" {delay(1.4)}><circle r="5" fill="{t["acc"]}"><animateMotion dur="9s" repeatCount="indefinite" path="{orbit}"/></circle>'
+               f'<circle r="12" stroke="{t["acc"]}" stroke-width="1"><animateMotion dur="9s" repeatCount="indefinite" path="{orbit}"/>'
+               f'<animate attributeName="r" values="6;16;6" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/></circle></g></g>')
+    # dimension: radius
+    out.append(f'<g class="f" {delay(1.6)} stroke="{t["muted"]}" stroke-width="1"><path d="M{cx} {cy} L{cx + r * 0.71:.1f} {cy - r * 0.71:.1f}"/><circle cx="{cx}" cy="{cy}" r="2.5" fill="{t["muted"]}"/></g>')
+    out.append(f'<g class="f" {delay(1.7)}>{mono("R 1.0 · WORLD", cx + r * 0.74, cy - r * 0.74 - 8, 12, t["muted"], spacing=1)}</g>')
+    return "\n".join(out)
+
+
+def typer(x, y, size, t, start=1.8, cycle=2.6):
+    """Terminal prompt that types each word, holds it, then wipes it."""
+    cw, total = size * MONO, len(WORDS) * cycle
+    clips, texts, cur_x, cur_t = [], [], [], []
+    for i, word in enumerate(WORDS):
+        steps = [k * 0.07 for k in range(len(word) + 1)]
+        times = [0] + steps[1:] + [cycle - 0.35, cycle - 0.34]
+        widths = [0] + [k * cw for k in range(1, len(word) + 1)] + [len(word) * cw, 0]
+        key = ";".join(f"{v / total:.4f}" for v in times + [total])
+        clips.append(f'<clipPath id="tw{i}"><rect x="{x}" y="{y - size}" height="{size * 1.4}" width="0">'
+                     f'<animate attributeName="width" values="{";".join(f"{v:.1f}" for v in widths + [0])}" keyTimes="{key}" calcMode="discrete" '
+                     f'dur="{total}s" begin="{start + i * cycle:.2f}s" repeatCount="indefinite"/></rect></clipPath>')
+        texts.append(f'<g clip-path="url(#tw{i})">{mono(word, x, y, size, t["ink"], bold=True)}</g>')
+        for tm, wd in zip(times, widths):
+            cur_t.append((i * cycle + tm) / total)
+            cur_x.append(x + wd + 4)
+    # SMIL keyTimes need to start at 0 and end at 1, strictly ordered
+    pairs = sorted(set(zip([round(v, 4) for v in cur_t], cur_x)))
+    keys, vals, seen = [], [], set()
+    for k, v in pairs:
+        if k not in seen and k < 1:
+            keys.append(k)
+            vals.append(v)
+            seen.add(k)
+    cursor = (f'<rect class="blink" x="{x}" y="{y - size * 0.82:.1f}" width="{cw * 0.62:.1f}" height="{size * 0.98:.1f}" fill="{t["acc"]}">'
+              f'<animate attributeName="x" values="{";".join(f"{v:.1f}" for v in vals)}" keyTimes="{";".join(f"{k:.4f}" for k in keys)}" '
+              f'calcMode="discrete" dur="{total}s" begin="{start:.2f}s" repeatCount="indefinite"/></rect>')
+    return "\n".join(clips + texts) + "\n" + cursor
 
 
 def hero(theme):
     t = THEMES[theme]
-    n, cycle = len(WORDS), 2.4
-    words = "".join(
-        f'<text class="b w" style="animation-delay:{1.4 + i * cycle:.1f}s" x="{W / 2}" y="398" text-anchor="middle" '
-        f'font-size="74" letter-spacing="-2.5" fill="url(#grad)">{escape(w)}</text>' for i, w in enumerate(WORDS))
-    css = (f".w{{opacity:0;transform-box:fill-box;transform-origin:center;animation:word {n * cycle:.1f}s cubic-bezier(.16,1,.3,1) infinite}}"
-           "@keyframes word{0%{opacity:0;transform:translateY(28px) scale(.96);filter:blur(10px)}"
-           "4%,14%{opacity:1;transform:none;filter:blur(0)}"
-           "18%{opacity:0;transform:translateY(-24px) scale(1.02);filter:blur(10px)}100%{opacity:0}}")
-    body = f"""{glow(470, 270, 420, 230, "glowA", 90, 14)}
-{glow(760, 300, 380, 210, "glowB", -80, 17)}
-<text class="sb u" {delay(0.2)} x="{W / 2}" y="96" text-anchor="middle" font-size="24" fill="url(#grad)">{escape(EYEBROW)}</text>
-<text class="b u" {delay(0.35)} x="{W / 2}" y="236" text-anchor="middle" font-size="152" letter-spacing="-6" fill="{t['text']}">Ons Kouki</text>
-<text class="md u" {delay(0.6)} x="{W / 2}" y="314" text-anchor="middle" font-size="42" letter-spacing="-0.8" fill="{t['muted']}">{escape(TAGLINE)}</text>
-{words}
-<text class="r u" {delay(0.9)} x="{W / 2}" y="478" text-anchor="middle" font-size="22" fill="{t['muted']}" xml:space="preserve">{escape(FIELDS)}</text>"""
-    return svg(W, 520, theme, body, f"Ons Kouki, {EYEBROW}. {TAGLINE} {' '.join(WORDS)} {FIELDS}", css)
+    h, x0 = 560, 48
+    name, name_end = line_text("Ons Kouki", x0, 268, 150, t["ink"], stroke=3.2, start=0.3, per=0.16)
+    mid = (x0 + name_end) / 2
+    dim_label = "IDEA → PRODUCTION"
+    lw = mono_width(dim_label, 13, 2) + 24
+    fields = "  /  ".join(f.upper() for f in FIELDS)
+    body = f"""{dot_grid(t, W, h)}
+{crop_marks(t, W, h)}
+<g class="f" {delay(0.1)}><rect x="{x0}" y="62" width="10" height="10" fill="{t["acc"]}"/>{mono(f"FIG.00 — {ROLE.upper()}", x0 + 22, 72, 15, t["ink"], bold=True, spacing=2)}</g>
+<g class="f" {delay(0.2)}>{mono("SCALE 1:1 · REV " + str(dt.date.today().year), W - 48, 72, 13, t["muted"], anchor="end", spacing=1.5)}</g>
+{name}
+<g class="f" {delay(1.6)} stroke="{t["muted"]}" stroke-width="1.2">
+  <path d="M{x0} 300 V324 M{name_end} 300 V324 M{x0} 312 H{mid - lw / 2:.1f} M{mid + lw / 2:.1f} 312 H{name_end}"/>
+  <path d="M{x0 + 10} 307 L{x0} 312 L{x0 + 10} 317 M{name_end - 10} 307 L{name_end} 312 L{name_end - 10} 317"/>
+</g>
+<g class="f" {delay(1.7)}>{mono(dim_label, mid, 317, 13, t["muted"], anchor="middle", spacing=2)}</g>
+<g class="f" {delay(1.6)}>{mono("~/ons $", x0, 410, 34, t["acc"], bold=True)}</g>
+{typer(x0 + mono_width("~/ons $ ", 34), 410, 34, t)}
+<g class="f" {delay(2.0)}><path d="M{x0} 470.5 H{x0 + 40}" stroke="{t["acc"]}" stroke-width="2"/>{mono(fields, x0, 500, 15, t["muted"], spacing=2)}</g>
+{crosshair(1150, 512, t)}
+{globe(960, 270, 140, t)}"""
+    return svg(W, h, body, f"Ons Kouki, {ROLE}. Idea to production: {', '.join(WORDS)}. {', '.join(FIELDS)}")
 
 
 def button(theme, label, filled, i):
-    """Apple-style pill button with an arrow that nudges up-right every few seconds."""
+    """Outlined key with accent corner ticks and an arrow that nudges every few seconds."""
     t = THEMES[theme]
-    size = 22
-    width = round(text_width(label, size, "sb") + 84)
-    fill, stroke, color = (t["accent"], "none", t["on_accent"]) if filled else ("none", t["accent"], t["accent"])
+    size, sp, h = 16, 2, 54
+    text = label.upper()
+    width = round(mono_width(text, size, sp) + 86)
+    fill, color = (t["ink"], t["bg"]) if filled else ("none", t["ink"])
+    ticks = f"M1 13 V1 H13 M{width - 13} 1 H{width - 1} V13 M1 {h - 13} V{h - 1} H13 M{width - 13} {h - 1} H{width - 1} V{h - 13}"
     hop = f'values="0 0;3 -3;0 0;0 0" keyTimes="0;0.05;0.1;1" dur="5s" begin="{2 + i * 1.6:.1f}s" repeatCount="indefinite"'
-    body = f"""<g class="u" {delay(1 + i * 0.12)}>
-<rect x="1.5" y="1.5" width="{width - 3}" height="57" rx="28.5" fill="{fill}" stroke="{stroke}" stroke-width="1.5"/>
-<text class="sb" x="30" y="37" font-size="{size}" letter-spacing="-0.2" fill="{color}">{escape(label)}</text>
-<g transform="translate({width - 44} 24)"><path d="M2 12 L12 2 M4 2 H12 V10" stroke="{color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    body = f"""<g class="f" {delay(0.6 + i * 0.12)}>
+<rect x="5" y="5" width="{width - 10}" height="{h - 10}" fill="{fill}" stroke="{t["ink"]}" stroke-width="1.4"/>
+<path class="dw" {delay(0.8 + i * 0.12)} pathLength="1" d="{ticks}" stroke="{t["acc"]}" stroke-width="2"/>
+{mono(text, 26, 33, size, color, bold=True, spacing=sp)}
+<g transform="translate({width - 42} 19)"><path d="M2 14 L14 2 M5 2 H14 V11" stroke="{t["acc"]}" stroke-width="2.2" stroke-linecap="square">
 <animateTransform attributeName="transform" type="translate" {hop}/></path></g>
 </g>"""
-    return svg(width, 60, theme, body, label), width
+    return svg(width, h, body, label), width
 
 
 def graph(theme, calendars):
     t = THEMES[theme]
-    cell, gap, ygap = 6.2, 1.4, 22
+    gap, ygap = 1.8, 26
     years = sorted(calendars)
     block = (W - ygap * (len(years) - 1)) / len(years)
-    step = min(cell + gap, block / 53)
-    gy = 52
-    out = [f'<text class="sb f" {delay(0.2)} x="0" y="26" font-size="22" fill="{t["text"]}">Activity</text>',
-           f'<text class="r f" {delay(0.3)} x="{W}" y="26" text-anchor="end" font-size="18" fill="{t["muted"]}">Less <tspan fill="{t["dots"][1]}">●</tspan> <tspan fill="{t["dots"][2]}">●</tspan> <tspan fill="{t["dots"][3]}">●</tspan> <tspan fill="{t["dots"][4]}">●</tspan> More</text>']
+    step = block / 53
+    cell = step - gap
+    gy = 50
+    alphas = [0, 0.3, 0.55, 0.8, 1]
+    legend_x = W - 5 * (cell + 6) - mono_width(" MORE", 12, 1)
+    legend = "".join(f'<rect class="l{i}" x="{legend_x + i * (cell + 6):.1f}" y="13" width="{cell:.1f}" height="{cell:.1f}"/>' for i in range(5))
+    out = [f'<g class="f" {delay(0.1)}>{mono("FIG.01 — ACTIVITY.LOG", 0, 24, 15, t["ink"], bold=True, spacing=2)}</g>',
+           f'<g class="f" {delay(0.2)}>{mono("LESS", legend_x - 10, 22, 12, t["muted"], anchor="end", spacing=1)}{legend}'
+           f'{mono("MORE", W, 22, 12, t["muted"], anchor="end", spacing=1)}</g>']
     for yi, year in enumerate(years):
         x0 = yi * (block + ygap)
         jan1 = dt.date(year, 1, 1)
@@ -215,123 +320,153 @@ def graph(theme, calendars):
         rects = []
         for date, level in sorted(calendars[year].items()):
             col, row = divmod((date - jan1).days + offset, 7)
-            appear = 0.4 + yi * 0.4 + col * 0.02
-            wave = 4 + (yi * 53 + col) * 0.035  # a soft brightness wave, left to right
-            rects.append(f'<rect class="d l{level}" style="animation-delay:{appear:.2f}s,{wave:.2f}s" '
-                         f'x="{x0 + col * step:.1f}" y="{gy + row * step:.1f}" width="{step - gap:.1f}" height="{step - gap:.1f}" rx="2"/>')
+            rects.append(f'<rect class="d l{level}" style="animation-delay:{0.3 + yi * 0.3 + col * 0.015:.2f}s" '
+                         f'x="{x0 + col * step + 0.5:.1f}" y="{gy + row * step + 0.5:.1f}" width="{cell - 1:.1f}" height="{cell - 1:.1f}"/>')
         out.append("".join(rects))
-        out.append(f'<text class="md f" {delay(0.4 + yi * 0.4)} x="{x0}" y="{gy + 7 * step + 30:.0f}" font-size="18" fill="{t["muted"]}">{year}</text>')
-    css = ("".join(f".l{i}{{fill:{c}}}" for i, c in enumerate(t["dots"]))
-           + ".d{opacity:0;animation:fade 1s ease-out forwards,pulse 7s ease-in-out infinite}"
-           "@keyframes pulse{0%,100%{fill-opacity:1}6%{fill-opacity:.4}14%{fill-opacity:1}}")
-    return svg(W, int(gy + 7 * step + 40), theme, "\n".join(out), "Contribution activity", css)
+        out.append(f'<g class="f" {delay(0.3 + yi * 0.3)}><path d="M{x0} {gy + 7 * step + 12:.1f} H{x0 + block - 4:.1f}" stroke="{t["faint"]}"/>'
+                   f'{mono(str(year), x0, gy + 7 * step + 32, 13, t["muted"], spacing=1.5)}</g>')
+    height = gy + 7 * step + 40
+    # a scan line sweeping over the grid
+    out.append(f'<defs><linearGradient id="scan" x1="0" x2="1"><stop offset="0" stop-color="{t["acc"]}" stop-opacity="0"/>'
+               f'<stop offset="1" stop-color="{t["acc"]}" stop-opacity="0.22"/></linearGradient></defs>'
+               f'<g><rect x="-80" y="{gy - 6}" width="80" height="{7 * step + 10:.1f}" fill="url(#scan)"/>'
+               f'<path d="M0 {gy - 6} V{gy + 7 * step + 4:.1f}" stroke="{t["acc"]}" stroke-width="1.5"/>'
+               f'<animateTransform attributeName="transform" type="translate" values="-10 0;{W + 90} 0" dur="7s" begin="2s" repeatCount="indefinite"/></g>')
+    css = (f".l0{{fill:none;stroke:{t['faint']};stroke-width:1}}"
+           + "".join(f".l{i}{{fill:{t['acc']};fill-opacity:{a}}}" for i, a in enumerate(alphas) if i)
+           + ".d{opacity:0;animation:fade .6s ease-out forwards}")
+    return svg(W, int(height), "\n".join(out), "Contribution activity", css)
 
 
-def heading(theme, bold, rest):
-    """Two-tone headline: the statement, then a quieter follow-up."""
+def heading(theme, index, label, title, note):
+    """Section index, a hand-drawn title and a rule that runs to the edge."""
     t = THEMES[theme]
-    body = f"""<text class="b u" {delay(0.15)} x="0" y="96" font-size="56" letter-spacing="-1.8"><tspan fill="{t['text']}">{escape(bold)}</tspan> <tspan fill="{t['muted']}">{escape(rest)}</tspan></text>"""
-    return svg(W, 118, theme, body, f"{bold} {rest}")
+    drawn, end = line_text(title, 0, 112, 70, t["ink"], stroke=2.6, start=0.2, per=0.06)
+    body = f"""<g class="f" {delay(0.05)}>{mono(index, 0, 30, 15, t["acc"], bold=True, spacing=2)}{mono("/ " + label, 34, 30, 15, t["muted"], spacing=2)}</g>
+{drawn}
+<path class="dw" {delay(0.8)} pathLength="1" d="M{end + 28:.0f} 104.5 H{W - 8}" stroke="{t["faint"]}" stroke-width="1.5"/>
+<circle class="f" {delay(1.6)} cx="{W - 5}" cy="104.5" r="4.5" stroke="{t["acc"]}" stroke-width="1.6"/>
+<g class="f" {delay(1.2)}>{mono(note, W - 20, 90, 13, t["muted"], anchor="end", spacing=2)}</g>"""
+    return svg(W, 132, body, f"{title}. {note}")
 
 
 def glyph(slug, t):
-    """Small looping animation that hints at each project, drawn in a 64×64 box."""
-    a, g, spline4 = t["accent"], "url(#grad)", ";".join([EASE] * 4)
+    """Small looping line drawing that hints at each project, in a 64×64 box."""
+    a, ink, muted = t["acc"], t["ink"], t["muted"]
     if slug == "claritychains":  # linked rings turning
-        rings = "".join(f'<circle cx="{32 + 10 * math.cos(k * 2.094):.1f}" cy="{32 + 10 * math.sin(k * 2.094):.1f}" r="12" stroke="{g}" stroke-width="2"/>' for k in range(3))
-        return (f'<g>{rings}<animateTransform attributeName="transform" type="rotate" values="0 32 32;360 32 32" dur="14s" repeatCount="indefinite"/></g>'
+        rings = "".join(f'<circle cx="{32 + 10 * math.cos(k * 2.094):.1f}" cy="{32 + 10 * math.sin(k * 2.094):.1f}" r="12" stroke="{ink}" stroke-width="1.2"/>' for k in range(3))
+        return (f'<circle cx="32" cy="32" r="29" stroke="{muted}" stroke-width="0.6" stroke-dasharray="1.5 3"/>'
+                f'<g>{rings}<animateTransform attributeName="transform" type="rotate" values="0 32 32;360 32 32" dur="14s" repeatCount="indefinite"/></g>'
                 f'<circle cx="32" cy="32" r="3" fill="{a}"><animate attributeName="r" values="2;3.5;2" dur="2.4s" repeatCount="indefinite"/></circle>')
     if slug == "model":  # a price line drawing itself into a forecast cone
-        return (f'<path d="M40,31 L60,14 L60,44 Z" fill="{a}" opacity="0.15"/><path d="M40,31 L60,26" stroke="{a}" stroke-dasharray="3 3" stroke-width="1.6"/>'
-                f'<path d="M4,44 L14,38 L22,41 L32,28 L40,31" stroke="{g}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60">'
+        return (f'<path d="M40,31 L60,14 M40,31 L60,44" stroke="{muted}" stroke-width="1" stroke-dasharray="2 2"/><path d="M40,31 L60,26" stroke="{a}" stroke-width="1.6"/>'
+                f'<path d="M4,44 L14,38 L22,41 L32,28 L40,31" stroke="{ink}" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60">'
                 f'<animate attributeName="stroke-dashoffset" values="60;0;0;60" keyTimes="0;0.4;0.85;1" dur="4s" repeatCount="indefinite"/></path>'
-                f'<line x1="4" y1="56" x2="60" y2="56" stroke="{t["line"]}" stroke-width="1.6"/>')
+                f'<path d="M4,56 H60 M4,56 V8" stroke="{muted}" stroke-width="1"/>')
     if slug == "honeypot":  # a hexagon cell with something buzzing around it
         hexagon = " ".join(f"{32 + 18 * math.cos(math.pi / 3 * k + math.pi / 6):.1f},{32 + 18 * math.sin(math.pi / 3 * k + math.pi / 6):.1f}" for k in range(6))
-        return (f'<polygon points="{hexagon}" stroke="{g}" stroke-width="2" stroke-linejoin="round"><animateTransform attributeName="transform" type="rotate" values="0 32 32;60 32 32;60 32 32" keyTimes="0;0.3;1" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="{EASE};0 0 1 1"/></polygon>'
-                f'<circle r="3" fill="{a}"><animateMotion dur="3s" repeatCount="indefinite" path="M32,6 C62,6 62,58 32,58 C2,58 2,6 32,6Z"/></circle>')
+        inner = " ".join(f"{32 + 9 * math.cos(math.pi / 3 * k + math.pi / 6):.1f},{32 + 9 * math.sin(math.pi / 3 * k + math.pi / 6):.1f}" for k in range(6))
+        return (f'<polygon points="{inner}" stroke="{muted}" stroke-width="1"/>'
+                f'<polygon points="{hexagon}" stroke="{ink}" stroke-width="1.6" stroke-linejoin="round"><animateTransform attributeName="transform" type="rotate" values="0 32 32;60 32 32;60 32 32" keyTimes="0;0.3;1" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="{EASE};0 0 1 1"/></polygon>'
+                f'<circle r="2.6" fill="{a}"><animateMotion dur="3s" repeatCount="indefinite" path="M32,6 C62,6 62,58 32,58 C2,58 2,6 32,6Z"/></circle>')
     if slug == "rl-ddos":  # packets hitting a wall, only one gets through
-        pulses = "".join(f'<circle r="2.6" fill="{a}"><animateMotion path="M2,32 H40" dur="1.8s" begin="{k * 0.6:.1f}s" repeatCount="indefinite"/>'
-                         f'<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.85;1" dur="1.8s" begin="{k * 0.6:.1f}s" repeatCount="indefinite"/></circle>' for k in range(3))
-        return (f'<line x1="2" y1="32" x2="62" y2="32" stroke="{t["line"]}" stroke-width="1.6"/>{pulses}'
-                f'<rect x="42" y="14" width="5" height="36" rx="2.5" fill="{g}"/>'
-                f'<circle r="2.6" fill="{t["grad"][2]}"><animateMotion path="M47,32 H62" dur="1.8s" repeatCount="indefinite"/></circle>')
+        pulses = "".join(f'<rect x="-2" y="-2" width="4" height="4" fill="{ink}"><animateMotion path="M2,32 H40" dur="1.8s" begin="{k * 0.6:.1f}s" repeatCount="indefinite"/>'
+                         f'<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.85;1" dur="1.8s" begin="{k * 0.6:.1f}s" repeatCount="indefinite"/></rect>' for k in range(3))
+        return (f'<line x1="2" y1="32" x2="62" y2="32" stroke="{muted}" stroke-width="1" stroke-dasharray="2 2"/>{pulses}'
+                f'<rect x="42" y="14" width="5" height="36" stroke="{ink}" stroke-width="1.4"/>'
+                f'<rect x="-2" y="-2" width="4" height="4" fill="{a}"><animateMotion path="M47,32 H62" dur="1.8s" repeatCount="indefinite"/></rect>')
     if slug == "car-price":  # a gauge settling on a price
-        times = f'keyTimes="0;0.3;0.5;0.75;1" calcMode="spline" keySplines="{spline4}"'
-        return (f'<path d="M8,44 A24,24 0 0 1 56,44" stroke="{t["line"]}" stroke-width="4" stroke-linecap="round"/>'
-                f'<path d="M8,44 A24,24 0 0 1 56,44" stroke="{g}" stroke-width="4" stroke-linecap="round" stroke-dasharray="76" stroke-dashoffset="76">'
-                f'<animate attributeName="stroke-dashoffset" values="76;20;45;8;76" dur="5s" repeatCount="indefinite" {times}/></path>'
-                f'<line x1="32" y1="44" x2="32" y2="26" stroke="{t["text"]}" stroke-width="2.4" stroke-linecap="round">'
+        times = f'keyTimes="0;0.3;0.5;0.75;1" calcMode="spline" keySplines="{";".join([EASE] * 4)}"'
+        ticks = " ".join(f"M{32 + 27 * math.cos(math.pi * (1 + k / 8)):.1f} {44 + 27 * math.sin(math.pi * (1 + k / 8)):.1f} L{32 + 31 * math.cos(math.pi * (1 + k / 8)):.1f} {44 + 31 * math.sin(math.pi * (1 + k / 8)):.1f}" for k in range(9))
+        return (f'<path d="{ticks}" stroke="{muted}" stroke-width="1"/><path d="M8,44 A24,24 0 0 1 56,44" stroke="{muted}" stroke-width="1"/>'
+                f'<line x1="32" y1="44" x2="32" y2="22" stroke="{a}" stroke-width="1.8">'
                 f'<animateTransform attributeName="transform" type="rotate" values="-80 32 44;35 32 44;-10 32 44;70 32 44;-80 32 44" dur="5s" repeatCount="indefinite" {times}/></line>'
-                f'<circle cx="32" cy="44" r="3.5" fill="{t["text"]}"/>')
+                f'<circle cx="32" cy="44" r="3" stroke="{ink}" stroke-width="1.4"/>')
     return ""
 
 
 def card(theme, slug, eyebrow, title, text, tech, width, i, live=False):
-    """Bento card: soft rounded panel, eyebrow, big title, copy, tech line and a looping glyph."""
+    """Spec sheet: hairline frame, accent corners, drawn title, mono copy and a looping line drawing."""
     t = THEMES[theme]
-    h, pad = 300, 44
+    h, pad = 300, 40
     wide = width > 800
-    glyph_scale = 2.6 if wide else 1.3
-    glyph_size = 64 * glyph_scale
-    text_area = width - pad * 2 - (glyph_size + 40 if wide else 0)
-    lines = wrap(text, 22, text_area)
-    copy = "".join(f'<text class="r" x="{pad}" y="{150 + k * 32}" font-size="22" fill="{t["muted"]}">{escape(line)}</text>' for k, line in enumerate(lines))
-    # wide card: glyph on the right; small card: glyph in the bottom-right corner
-    gx, gy = (width - pad - glyph_size, (h - glyph_size) / 2 + 10) if wide else (width - pad - glyph_size + 6, h - pad - glyph_size + 14)
+    gs = 2.8 if wide else 1.25
+    gsize = 64 * gs
+    text_area = width - pad * 2 - (gsize + 60 if wide else 0)
+    title_room = text_area - (110 if live else 0) - (0 if wide else 56)
+    size = min(52, title_room / line_width(title, 1))
+    drawn, title_end = line_text(title, pad, 122, size, t["ink"], stroke=2.2, start=0.3 + i * 0.1, per=0.05)
+    lines = wrap(text, 16, text_area)
+    copy = "".join(mono(line, pad, 166 + k * 25, 16, t["muted"]) for k, line in enumerate(lines))
+    gx, gy = (width - pad - gsize - 20, (h - gsize) / 2 + 6) if wide else (width - pad - gsize + 4, h - pad - gsize + 14)
+    corners = (f"M0.75 18 V0.75 H18 M{width - 18} 0.75 H{width - 0.75} V18 "
+               f"M0.75 {h - 18} V{h - 0.75} H18 M{width - 18} {h - 0.75} H{width - 0.75} V{h - 18}")
     badge = ""
     if live:
-        lw = len(title) * (44 * 0.55 - 1.4) + pad + 18
-        badge = f'''<g transform="translate({lw:.0f} 70)"><rect width="76" height="30" rx="15" fill="#30d158" fill-opacity="0.15"/>
-<circle cx="18" cy="15" r="5" fill="#30d158"><animate attributeName="opacity" values="1;.25;1" dur="1.6s" repeatCount="indefinite"/></circle>
-<text class="sb" x="47" y="20.5" text-anchor="middle" font-size="15" fill="#30d158">LIVE</text></g>'''
+        badge = f'''<g class="f" {delay(1.2)} transform="translate({title_end + 22:.0f} 94)"><rect x="0.75" y="0.75" width="82" height="28" stroke="{t["live"]}" stroke-width="1.4"/>
+<circle cx="17" cy="15" r="4.5" fill="{t["live"]}"><animate attributeName="opacity" values="1;.2;1" dur="1.6s" repeatCount="indefinite"/></circle>
+{mono("LIVE", 50, 20, 13, t["live"], bold=True, anchor="middle", spacing=2)}</g>'''
     hop = f'values="0 0;3 -3;0 0;0 0" keyTimes="0;0.05;0.1;1" dur="5s" begin="{3 + i * 1.3:.1f}s" repeatCount="indefinite"'
-    body = f"""<g class="u" {delay(0.2 + i * 0.12)}>
-<rect width="{width}" height="{h}" rx="30" fill="{t['card']}"/>
-<g transform="translate({gx:.0f} {gy:.0f}) scale({glyph_scale})">{glyph(slug, t)}</g>
-<text class="sb" x="{pad}" y="60" font-size="15" letter-spacing="1.2" fill="url(#grad)">{escape(eyebrow)}</text>
-<text class="b" x="{pad}" y="104" font-size="44" letter-spacing="-1.4" fill="{t['text']}">{escape(title)}</text>
-{badge}
+    body = f"""<g class="f" {delay(0.1 + i * 0.1)}>
+<rect x="0.75" y="0.75" width="{width - 1.5}" height="{h - 1.5}" stroke="{t["faint"]}" stroke-width="1.5"/>
+<g transform="translate({gx:.0f} {gy:.0f}) scale({gs})">{glyph(slug, t)}</g>
+{mono(f"P.{i:02d}", pad, 52, 13, t["acc"], bold=True, spacing=2)}{mono("— " + eyebrow, pad + mono_width("P.00 ", 13, 2), 52, 13, t["muted"], spacing=2)}
 {copy}
-<text class="md" x="{pad}" y="{h - 40}" font-size="18" fill="{t['text']}" opacity="0.75">{escape(tech)}</text>
-<g transform="translate({width - pad - 36} 34)"><circle cx="18" cy="18" r="18" fill="{t['text']}" fill-opacity="0.08"/>
-<path d="M13 23 L23 13 M15 13 H23 V21" stroke="{t['text']}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><animateTransform attributeName="transform" type="translate" {hop}/></path></g>
-</g>"""
-    return svg(width, h, theme, body, f"{title}: {text}")
+{mono("› " + tech, pad, h - 34, 14, t["ink"])}
+<g transform="translate({width - pad - 36} 24)"><rect x="0.75" y="0.75" width="34.5" height="34.5" stroke="{t["faint"]}" stroke-width="1.5"/>
+<path d="M12 24 L24 12 M15 12 H24 V21" stroke="{t["ink"]}" stroke-width="1.8" stroke-linecap="square"><animateTransform attributeName="transform" type="translate" {hop}/></path></g>
+</g>
+<path class="dw" {delay(0.3 + i * 0.1)} pathLength="1" d="{corners}" stroke="{t["acc"]}" stroke-width="2"/>
+{drawn}
+{badge}"""
+    return svg(round(width), h, body, f"{title}: {text}")
 
 
-def marquee(theme):
-    """One endless row of pills per category, alternating direction, fading at the edges."""
+def circuit(theme):
+    """Toolbox as a circuit: each category is a trace, each tool a chip; a pulse lights them up in turn."""
     t = THEMES[theme]
-    size, row_h, label_w, pill_h = 19, 66, 210, 44
-    out = [f'''<linearGradient id="edge" x1="0" y1="0" x2="{W}" y2="0" gradientUnits="userSpaceOnUse">
-  <stop offset="{label_w / W:.3f}" stop-color="#000"/><stop offset="{(label_w + 60) / W:.3f}" stop-color="#fff"/>
-  <stop offset="{(W - 80) / W:.3f}" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
-<mask id="fade"><rect width="{W}" height="{len(STACK) * row_h}" fill="url(#edge)"/></mask>''']
+    size, sp, row_h, chip_h, x_node, top_y = 14, 0.5, 84, 36, 236, 36
+    x_end = W - 8
+    out = [f'<path class="dw" {delay(0.1)} pathLength="1" d="M{x_node} {top_y} V{top_y + (len(STACK) - 1) * row_h}" stroke="{t["faint"]}" stroke-width="1.5"/>']
     for r, (label, items) in enumerate(STACK):
-        y = 10 + r * row_h
-        pills, x = [], 0.0
-        for item in items * 3:
-            pw = text_width(item, size, "md") + 44
-            pills.append(f'<rect x="{x:.1f}" y="{y}" width="{pw:.1f}" height="{pill_h}" rx="{pill_h / 2}" fill="{t["card"]}"/>'
-                         f'<text class="md" x="{x + pw / 2:.1f}" y="{y + 28.5}" text-anchor="middle" font-size="{size}" fill="{t["text"]}">{escape(item)}</text>')
-            x += pw + 12
-        loop = x / 3  # width of one set of items
-        direction = f"0 0;{-loop:.1f} 0" if r % 2 == 0 else f"{-loop:.1f} 0;0 0"
-        out.append(f'''<text class="sb f" {delay(0.2 + r * 0.1)} x="0" y="{y + 29}" font-size="21" fill="{t['text']}">{escape(label)}</text>
-<g mask="url(#fade)"><g class="f" {delay(0.4 + r * 0.1)}><g transform="translate({label_w} 0)"><g>{''.join(pills)}
-  <animateTransform attributeName="transform" type="translate" values="{direction}" dur="{loop / 40:.1f}s" repeatCount="indefinite"/></g></g></g></g>''')
-    return svg(W, len(STACK) * row_h, theme, "\n".join(out),
-               "Toolbox: " + "; ".join(f"{a}: {', '.join(b)}" for a, b in STACK))
+        y = top_y + r * row_h
+        dur = 6 + r * 0.9
+        begin = 1.2 + r * 0.7
+        widths = [mono_width(item, size, sp) + 26 for item in items]
+        span = x_end - 24 - (x_node + 24)
+        gap = (span - sum(widths)) / (len(items) - 1)
+        chips, x = [], x_node + 24
+        for k, (item, cw) in enumerate(zip(items, widths)):
+            p = (x + cw / 2 - x_node) / (x_end - x_node)
+            keys = f"0;{max(p - 0.04, 0.001):.3f};{p:.3f};{min(p + 0.12, 0.999):.3f};1"
+            chips.append(f'<g class="f" {delay(0.4 + r * 0.12 + k * 0.05)}><rect x="{x:.1f}" y="{y - chip_h / 2}" width="{cw:.1f}" height="{chip_h}" fill="{t["bg"]}" stroke="{t["faint"]}" stroke-width="1.4">'
+                         f'<animate attributeName="stroke" values="{t["faint"]};{t["faint"]};{t["acc"]};{t["faint"]};{t["faint"]}" keyTimes="{keys}" dur="{dur}s" begin="{begin}s" repeatCount="indefinite"/></rect>'
+                         f'{mono(item, x + cw / 2, y + 5, size, t["ink"], anchor="middle", spacing=sp)}</g>')
+            x += cw + gap
+        trace = f"M{x_node} {y} H{x_end}"
+        out.append(f'''<path class="dw" {delay(0.2 + r * 0.12)} pathLength="1" d="{trace}" stroke="{t["faint"]}" stroke-width="1.5"/>
+<circle class="f" {delay(0.3 + r * 0.12)} cx="{x_node}" cy="{y}" r="4" fill="{t["bg"]}" stroke="{t["acc"]}" stroke-width="1.6"/>
+<rect class="f" {delay(0.3 + r * 0.12)} x="{x_end - 3}" y="{y - 3}" width="6" height="6" fill="{t["muted"]}"/>
+<g class="f" {delay(0.15 + r * 0.12)}>{mono(f"{r + 1:02d}", 0, y + 5, 13, t["acc"], bold=True, spacing=1.5)}{mono(label.upper(), 34, y + 5, 14, t["ink"], bold=True, spacing=1.5)}</g>
+<g class="f" {delay(1)}><circle r="3.5" fill="{t["acc"]}"><animateMotion path="{trace}" dur="{dur}s" begin="{begin}s" repeatCount="indefinite"/></circle></g>
+{"".join(chips)}''')
+    height = top_y + (len(STACK) - 1) * row_h + 40
+    return svg(W, height, "\n".join(out), "Toolbox: " + "; ".join(f"{a}: {', '.join(b)}" for a, b in STACK))
 
 
 def outro(theme):
     t = THEMES[theme]
-    body = f"""{glow(W / 2, 140, 420, 140, "glowA", 70, 15)}
-<text class="b u" {delay(0.2)} x="{W / 2}" y="112" text-anchor="middle" font-size="84" letter-spacing="-3" fill="url(#grad)">To be continued.</text>
-<text class="md u" {delay(0.45)} x="{W / 2}" y="170" text-anchor="middle" font-size="30" letter-spacing="-0.4" fill="{t['muted']}">Got a wild idea? Let's build it.</text>
-<text class="r f" {delay(0.9)} x="{W / 2}" y="236" text-anchor="middle" font-size="18" fill="{t['muted']}">English · French · Arabic</text>"""
-    return svg(W, 270, theme, body, "To be continued. Got a wild idea? Let's build it. Speaks English, French and Arabic.")
+    h = 300
+    drawn, _ = line_text("To be continued", W / 2, 140, 96, t["ink"], stroke=2.8, start=0.2, per=0.07, anchor="middle")
+    prompt = "> got a wild idea? let's build it"
+    pw = mono_width(prompt, 22)
+    body = f"""{crop_marks(t, W, h)}
+{drawn}
+<g class="f" {delay(1.4)}>{mono(prompt, W / 2 - 8, 202, 22, t["muted"], anchor="middle")}
+<rect class="blink" x="{W / 2 - 8 + pw / 2 + 6:.1f}" y="184" width="10" height="22" fill="{t["acc"]}"/></g>
+<g class="f" {delay(1.8)}><path d="M{W / 2 - 230} 258.5 H{W / 2 - 110} M{W / 2 + 110} 258.5 H{W / 2 + 230}" stroke="{t["faint"]}" stroke-width="1.5"/>
+{mono("EN · FR · AR — EOF", W / 2, 263, 13, t["muted"], anchor="middle", spacing=2)}</g>"""
+    return svg(W, h, body, "To be continued. Got a wild idea? Let's build it. Speaks English, French and Arabic.")
 
 
 def picture(name, alt, version, width="100%"):
@@ -356,20 +491,20 @@ def build():
     small = (W - 20) / 2
     for theme in THEMES:
         files = {"top": top(theme, total, this_year - 4), "hero": hero(theme), "graph": graph(theme, calendars),
-                 "work-title": heading(theme, "Things I've made.", "Built end to end."),
-                 "stack-title": heading(theme, "Toolbox.", "Always growing."),
-                 "stack": marquee(theme), "outro": outro(theme)}
+                 "work-title": heading(theme, "02", "WORK", "Things I've made", "BUILT END TO END"),
+                 "stack-title": heading(theme, "03", "STACK", "Toolbox", "ALWAYS GROWING"),
+                 "stack": circuit(theme), "outro": outro(theme)}
         slug, eyebrow, title, text, tech, _ = FEATURED
-        files[f"card-{slug}"] = card(theme, slug, eyebrow, title, text, tech, W, 0, live=True)
+        files[f"card-{slug}"] = card(theme, slug, eyebrow, title, text, tech, W, 1, live=True)
         for i, (slug, eyebrow, title, text, tech, _) in enumerate(WORK):
-            files[f"card-{slug}"] = card(theme, slug, eyebrow, title, text, tech, small, i + 1)
+            files[f"card-{slug}"] = card(theme, slug, eyebrow, title, text, tech, small, i + 2)
         for i, (slug, label, _, filled) in enumerate(LINKS):
             files[f"button-{slug}"], widths[slug] = button(theme, label, filled, i)
         for name, content in files.items():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-a{len(FONT_FACES)}"
+    v = f"{total}-l1"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", label, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, label, url, _ in LINKS)
@@ -377,7 +512,7 @@ def build():
     cards = [f'<a href="{w[5]}">{picture(f"card-{w[0]}", f"{w[2]}: {w[3]}", v, pct)}</a>' for w in WORK]
     readme = f"""{picture("top", f"Ons Kouki · {total} contributions", v)}
 
-{picture("hero", f"Ons Kouki, {EYEBROW}. {TAGLINE} {' '.join(WORDS)}", v)}
+{picture("hero", f"Ons Kouki, {ROLE}. Idea to production: {', '.join(WORDS)}.", v)}
 
 <p align="center">
   {buttons}
