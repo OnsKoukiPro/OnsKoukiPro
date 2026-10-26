@@ -23,7 +23,8 @@
   <circle cx="110" cy="128" r="26" fill="#121528" stroke="url(#grad)" stroke-width="2.5"/>
   <text x="110" y="136" text-anchor="middle" font-size="22">📡</text>
   <text x="110" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">network kid</text>
-  <text x="110" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">INSAT · RL × SDN</text>
+  <text x="110" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">INSAT</text>
+  <text x="110" y="206" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#64748b">RL × SDN</text>
 </g>
 <g>
   <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.176;0.294" dur="3.4s" fill="freeze"/>
@@ -31,7 +32,8 @@
   <circle cx="306" cy="128" r="26" fill="#121528" stroke="url(#grad)" stroke-width="2.5"/>
   <text x="306" y="136" text-anchor="middle" font-size="22">🛡️</text>
   <text x="306" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">devsecops</text>
-  <text x="306" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Speedykom · 2024</text>
+  <text x="306" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Speedykom</text>
+  <text x="306" y="206" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#64748b">2024</text>
 </g>
 <g>
   <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.353;0.471" dur="3.4s" fill="freeze"/>
@@ -39,7 +41,8 @@
   <circle cx="502" cy="128" r="26" fill="#121528" stroke="url(#grad)" stroke-width="2.5"/>
   <text x="502" y="136" text-anchor="middle" font-size="22">📶</text>
   <text x="502" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">fibre &amp; 5G</text>
-  <text x="502" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Omantel · 2025</text>
+  <text x="502" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Omantel</text>
+  <text x="502" y="206" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#64748b">2025</text>
 </g>
 <g>
   <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.529;0.647" dur="3.4s" fill="freeze"/>
@@ -47,7 +50,8 @@
   <circle cx="698" cy="128" r="26" fill="#121528" stroke="url(#grad)" stroke-width="2.5"/>
   <text x="698" y="136" text-anchor="middle" font-size="22">🎧</text>
   <text x="698" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">ml r&amp;d</text>
-  <text x="698" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Bridges For Fairness · 2025</text>
+  <text x="698" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Bridges For Fairness</text>
+  <text x="698" y="206" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#64748b">2025</text>
 </g>
 <g>
   <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.706;0.824" dur="3.4s" fill="freeze"/>
@@ -55,7 +59,8 @@
   <circle cx="894" cy="128" r="26" fill="#121528" stroke="url(#grad)" stroke-width="2.5"/>
   <text x="894" y="136" text-anchor="middle" font-size="22">🧠</text>
   <text x="894" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">founding ai/ml</text>
-  <text x="894" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Clarity Chain · 2025</text>
+  <text x="894" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">Clarity Chain</text>
+  <text x="894" y="206" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#64748b">2025–26</text>
 </g>
 <g>
   <animate attributeName="opacity" values="0;0;1" keyTimes="0;0.882;1.000" dur="3.4s" fill="freeze"/>
@@ -67,7 +72,8 @@
   <circle cx="1090" cy="128" r="26" fill="#121528" stroke="#a3e635" stroke-width="2.5"/>
   <text x="1090" y="136" text-anchor="middle" font-size="22">🔋</text>
   <text x="1090" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">platform &amp; thesis</text>
-  <text x="1090" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">ACCURE · 2026</text>
+  <text x="1090" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#94a3b8">ACCURE</text>
+  <text x="1090" y="206" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#64748b">2026</text>
 </g>
 <text x="1162" y="133" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#64748b">…</text>
 </svg>
