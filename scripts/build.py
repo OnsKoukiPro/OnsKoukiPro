@@ -78,10 +78,10 @@ FONT_FACES = {  # weight -> (css class, family, file)
     200: ("w2", "JBMonoXL", "jbmono-200"),
     300: ("w3", "JBMonoL", "jbmono-300"),
     400: ("w4", "JBMono", "jbmono-400"),
-    "sans": ("s", "InterDisplay", "inter-display-500"),
+    "sans": ("s", "Figtree", "figtree-500"),
 }
-SANS = json.loads((FONTS / "inter-display-advances.json").read_text(encoding="utf-8"))
-TRACK = -0.025  # display tracking in em, tight like Apple's large titles
+SANS = json.loads((FONTS / "figtree-advances.json").read_text(encoding="utf-8"))
+TRACK = -0.015  # display tracking in em, slightly tight for headlines
 ICONS = json.loads((ROOT / "icons" / "stack.json").read_text(encoding="utf-8"))
 FALLBACK = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 MONO = 0.6  # JetBrains Mono advance in em
@@ -565,7 +565,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t8"
+    v = f"{total}-t9"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
