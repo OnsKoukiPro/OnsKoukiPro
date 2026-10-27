@@ -31,8 +31,8 @@ THEMES = {
 }
 
 ROLE = "ICT Engineer"
+ROLE_TAIL = ", and many other things"
 WORDS = ["dream it", "design it", "build it", "train it", "ship it", "scale it"]
-FIELDS = ["AI/ML", "Software Engineering", "Cloud Infrastructure"]
 
 PLACES = [  # (label or None, label side, latitude, longitude): where I've worked
     ("OSLO", 1, 59.91, 10.75), ("AACHEN", -1, 50.78, 6.08), (None, 1, 49.59, 11.0), (None, 1, 49.25, 10.83),
@@ -73,10 +73,10 @@ LINKS = [
 ]
 
 STACK = [
-    ("ML & Data", ["PyTorch", "TensorFlow", "scikit-learn", "LangChain", "pandas", "Airflow", "Druid", "Superset"]),
     ("Backend", ["Python", "FastAPI", "Django", "NestJS", "Node.js", "Spring", "PostgreSQL", "Redis"]),
-    ("Cloud", ["AWS", "Azure", "Kubernetes", "Helm", "Argo CD", "Terraform", "Pulumi", "GitHub Actions"]),
     ("Security & Web", ["Vault", "Keycloak", "OpenSearch", "Grafana", "TypeScript", "React", "Next.js", "Angular"]),
+    ("ML & Data", ["PyTorch", "TensorFlow", "scikit-learn", "LangChain", "pandas", "Airflow", "Druid", "Superset"]),
+    ("Cloud", ["AWS", "Azure", "Kubernetes", "Helm", "Argo CD", "Terraform", "Pulumi", "GitHub Actions"]),
 ]
 
 FONT_FACES = {  # weight -> (css class, family, file)
@@ -342,18 +342,16 @@ def typer(x, y, size, t, start=2.6, cycle=2.8):
 
 def hero(theme):
     t = THEMES[theme]
-    h, x0 = 470, 0
-    fields = "  /  ".join(f.upper() for f in FIELDS)
+    h, x0 = 420, 0
     prompt = "~/ons $ "
     body = f"""{typed("$ whoami", x0, 46, 17, t["muted"], 0.2, per=0.07, weight=400)}
 {headline([("Ons Kouki", t["ink"])], x0 - 4, 178, 150, t, 1.0, per=0.09)[0]}
 {label(ROLE.upper(), x0, 238, 17, t, 2.0, t["ink"], spacing=6)}
+{label(ROLE_TAIL.upper(), x0 + mono_width(ROLE.upper(), 17, 6) - 6, 238, 17, t, 2.4, spacing=6)}
 <g class="f" {delay(2.3)}>{mono(prompt, x0, 340, 30, t["ok"], 300)}</g>
 {typer(x0 + mono_width(prompt, 30), 340, 30, t)}
-<path class="dw" {delay(2.6)} pathLength="1" d="M{x0} 398.5 H{x0 + 40}" stroke="{t["acc"]}" stroke-width="1.5"/>
-{label(fields, x0, 432, 14, t, 2.8)}
 {globe(985, 230, 128, t)}"""
-    return svg(W, h, body, f"Ons Kouki, {ROLE}. Idea to production: {', '.join(WORDS)}. {', '.join(FIELDS)}")
+    return svg(W, h, body, f"Ons Kouki, {ROLE}{ROLE_TAIL}. Idea to production: {', '.join(WORDS)}.")
 
 
 def button(theme, text, filled, i):
@@ -542,14 +540,18 @@ def circuit(theme):
 def outro(theme):
     t = THEMES[theme]
     h = 280
-    title = "To be continued"
-    prompt = "> got a wild idea? let's build it"
+    prompt = "> let's build it"
+    langs = "SPEAKS  EN · FR · AR"
+    # speech bubble, so the codes read as spoken languages
+    bubble = (f'<path d="M1 3.5 a3 3 0 0 1 3 -3 h12 a3 3 0 0 1 3 3 v7 a3 3 0 0 1 -3 3 h-8 l-4 3.5 v-3.5 a3 3 0 0 1 -3 -3 z'
+              f' M5.5 7 h0.01 M10 7 h0.01 M14.5 7 h0.01" fill="none" stroke="{t["acc"]}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>')
     body = f"""{typed("$ echo $NEXT", W / 2, 40, 15, t["muted"], 0.2, per=0.07, weight=400, anchor="middle")}
-{headline([("To be ", t["ink"]), ("continued", t["acc"])], W / 2, 142, 92, t, 1.3, per=0.07, anchor="middle")[0]}
-{typed(prompt, W / 2, 204, 19, t["muted"], 2.6, per=0.04, weight=300, anchor="middle", cursor="blink")}
-<g class="f" {delay(4.2)}><path d="M{W / 2 - 230} 248.5 H{W / 2 - 110} M{W / 2 + 110} 248.5 H{W / 2 + 230}" stroke="{t["faint"]}" stroke-width="1"/></g>
-{label("EN · FR · AR — EOF", W / 2, 253, 12, t, 4.0, anchor="middle")}"""
-    return svg(W, h, body, "To be continued. Got a wild idea? Let's build it. Speaks English, French and Arabic.")
+{headline([("Got a wild ", t["ink"]), ("idea?", t["acc"])], W / 2, 142, 92, t, 1.3, per=0.07, anchor="middle")[0]}
+{typed(prompt, W / 2, 204, 19, t["muted"], 2.6, per=0.05, weight=300, anchor="middle")}
+<path class="dw" {delay(3.6)} pathLength="1" d="M0 232.5 H{W}" stroke="{t["faint"]}" stroke-width="1"/>
+{reveal(f'<g transform="translate(0 246)">{bubble}</g>' + mono(langs, 30, 259, 12, t["muted"], 400, spacing=2), 4.0)}
+{typed("EOF", W - 16, 260, 15, t["acc"], 4.4, per=0.18, weight=400, anchor="end", cursor="blink")}"""
+    return svg(W, h, body, "Got a wild idea? Let's build it. Speaks English, French and Arabic. EOF")
 
 
 def picture(name, alt, version, width="100%"):
@@ -574,7 +576,7 @@ def build():
     small = (W - 20) / 2
     for theme in THEMES:
         files = {"top": top(theme, total, this_year - 4), "hero": hero(theme), "graph": graph(theme, calendars),
-                 "work-title": heading(theme, "02", "WORK", "Things I've ", "made", "BUILT END TO END"),
+                 "work-title": heading(theme, "02", "WORK", "Some things I ", "made", "BUILT END TO END"),
                  "stack-title": heading(theme, "03", "STACK", "Tools I ", "use", "ALWAYS GROWING"),
                  "stack": circuit(theme), "outro": outro(theme)}
         for i, (slug, eyebrow, title, text, tech, _, badge) in enumerate(FEATURED):
@@ -587,7 +589,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t10"
+    v = f"{total}-t11"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
@@ -604,7 +606,7 @@ def build():
 
 {picture("graph", "Contribution activity", v)}
 
-{picture("work-title", "Things I've made. Built end to end.", v)}
+{picture("work-title", "Some things I made. Built end to end.", v)}
 
 {featured}
 <p>
@@ -618,7 +620,7 @@ def build():
 
 {picture("stack", "; ".join(f"{a}: {', '.join(b)}" for a, b in STACK), v)}
 
-{picture("outro", "To be continued. Got a wild idea? Let's build it.", v)}
+{picture("outro", "Got a wild idea? Let's build it.", v)}
 """
     (ROOT / "README.md").write_text(readme, encoding="utf-8")
     print(f"{total} contributions, {len(list(ASSETS.glob('*.svg')))} svgs")
