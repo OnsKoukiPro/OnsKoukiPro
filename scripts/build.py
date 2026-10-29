@@ -1,7 +1,8 @@
 """Build the profile README and its animated terminal-style SVGs (light + dark).
 
 Usage: python scripts/build.py
-Fetches the public contribution calendar, writes assets/*.svg and README.md.
+Fetches the public GitHub and GitLab contribution calendars, writes assets/*.svg and README.md.
+GitLab only serves the last twelve months, so its daily counts are kept in data/gitlab.json.
 Headlines are set in Outfit Light, everything else in JetBrains Mono at light weights (both SIL OFL).
 Headlines type themselves character by character; labels and cards fade in, rising into focus.
 Toolbox icons are Simple Icons paths (CC0), vendored in icons/stack.json.
@@ -17,9 +18,11 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 USER = "OnsKoukiPro"
+GITLAB_USERS = ["OnsKoukiPro", "onskouki"]  # personal and work accounts
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 FONTS = ROOT / "fonts"
+GITLAB_CACHE = ROOT / "data" / "gitlab.json"
 RAW = f"https://raw.githubusercontent.com/{USER}/{USER}/main/assets"
 W = 1200
 
@@ -132,13 +135,36 @@ def font_css(body):
 def fetch_calendar(year):
     url = f"https://github.com/users/{USER}/contributions?from={year}-01-01&to={year}-12-31"
     html = urllib.request.urlopen(url, timeout=30).read().decode()
-    levels = {}
+    tips = {m.group(1): int(m.group(2)) for m in re.finditer(r'for="([^"]+)"[^>]*>(\d+) contributions? on ', html)}
+    counts = {}
     for td in re.findall(r"<td[^>]*ContributionCalendar-day[^>]*>", html):
-        date, level = re.search(r'data-date="([^"]+)"', td), re.search(r'data-level="(\d)"', td)
-        if date and level:
-            levels[dt.date.fromisoformat(date.group(1))] = int(level.group(1))
-    total = sum(int(n) for n in re.findall(r">(\d+) contributions? on ", html))
-    return levels, total
+        date, day_id = re.search(r'data-date="([^"]+)"', td), re.search(r'id="([^"]+)"', td)
+        if date and day_id:
+            counts[dt.date.fromisoformat(date.group(1))] = tips.get(day_id.group(1), 0)
+    return counts
+
+
+def fetch_gitlab():
+    """Daily GitLab counts across all accounts, merged into the cache so older days are not lost."""
+    cache = json.loads(GITLAB_CACHE.read_text()) if GITLAB_CACHE.exists() else {}
+    fresh = {}
+    for user in GITLAB_USERS:
+        url = f"https://gitlab.com/users/{user}/calendar.json"
+        for date, n in json.loads(urllib.request.urlopen(url, timeout=30).read()).items():
+            fresh[date] = fresh.get(date, 0) + n
+    cache.update(fresh)
+    GITLAB_CACHE.parent.mkdir(exist_ok=True)
+    GITLAB_CACHE.write_text(json.dumps(dict(sorted(cache.items())), indent=0) + "\n")
+    return {dt.date.fromisoformat(d): n for d, n in cache.items()}
+
+
+def levels(counts):
+    """Shade 1 to 4 by quartile of the active days, like GitHub."""
+    active = sorted(n for n in counts.values() if n)
+    if not active:
+        return {d: 0 for d in counts}
+    cuts = [active[len(active) * q // 4] for q in (1, 2, 3)]
+    return {d: n and 1 + sum(n > c for c in cuts) for d, n in counts.items()}
 
 
 def svg(width, height, body, label, css=""):
@@ -387,7 +413,7 @@ def graph(theme, calendars):
     alphas = [0, 0.3, 0.55, 0.8, 1]
     legend_x = W - 5 * (cell + 6) - mono_width(" MORE", 11, 1)
     legend = "".join(f'<rect class="l{i}" x="{legend_x + i * (cell + 6):.1f}" y="12" width="{cell:.1f}" height="{cell:.1f}"/>' for i in range(5))
-    out = [label("01 / ACTIVITY.LOG", 0, 24, 13, t, 0.1, t["acc"]),
+    out = [label("01 / ACTIVITY.LOG · GITHUB + GITLAB", 0, 24, 13, t, 0.1, t["acc"]),
            f'<g class="f" {delay(0.4)}>{mono("LESS", legend_x - 10, 21, 11, t["muted"], anchor="end", spacing=1)}{legend}'
            f'{mono("MORE", W, 21, 11, t["muted"], anchor="end", spacing=1)}</g>']
     cells = []
@@ -408,7 +434,7 @@ def graph(theme, calendars):
                f'<animateTransform attributeName="transform" type="translate" values="-10 0;{W + 10} 0" dur="8s" begin="2.6s" repeatCount="indefinite"/></g>')
     css = (f".l0{{fill:none;stroke:{t['faint']};stroke-width:.8}}"
            + "".join(f".l{i}{{fill:{t['ok']};fill-opacity:{a}}}" for i, a in enumerate(alphas) if i))
-    return svg(W, int(height), "\n".join(out), "Contribution activity", css)
+    return svg(W, int(height), "\n".join(out), "Contribution activity on GitHub and GitLab", css)
 
 
 def heading(theme, index, name, plain, accent, note):
@@ -562,12 +588,14 @@ def picture(name, alt, version, width="100%"):
 def build():
     this_year = dt.date.today().year
     years = [this_year - 2, this_year - 1, this_year]
-    calendars, total = {}, 0
+    gitlab = fetch_gitlab()
+    counts = {}
     for year in [this_year - 4, this_year - 3] + years:
-        levels, n = fetch_calendar(year)
-        total += n
-        if year in years:
-            calendars[year] = levels
+        for date, n in fetch_calendar(year).items():
+            counts[date] = n + gitlab.get(date, 0)
+    total = sum(counts.values())
+    shown = levels({d: n for d, n in counts.items() if d.year in years})
+    calendars = {year: {d: lv for d, lv in shown.items() if d.year == year} for year in years}
 
     ASSETS.mkdir(exist_ok=True)
     for old in ASSETS.glob("*.svg"):
@@ -604,7 +632,7 @@ def build():
   {buttons}
 </p>
 
-{picture("graph", "Contribution activity", v)}
+{picture("graph", "Contribution activity on GitHub and GitLab", v)}
 
 {picture("work-title", "Some things I made. Built end to end.", v)}
 
