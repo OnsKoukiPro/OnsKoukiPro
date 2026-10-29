@@ -55,8 +55,8 @@ FEATURED = [  # (slug, eyebrow, title, text, tech, url, badge)
 ]
 WORK = [
     ("model", "FORECASTING", "claritychains-model",
-     "Price forecasts and a hedging optimiser for lithium, cobalt and nickel.",
-     "Python · Streamlit · SciPy", f"https://github.com/{USER}/claritychains-model"),
+     "Price forecasts and hedging for critical battery and EV materials.",
+     "Python · pandas · SciPy", f"https://github.com/{USER}/claritychains-model"),
     ("honeypot", "SECURITY", "Honeypot-CK8s",
      "A honeynet inside a vCluster. Attackers get in, I get dashboards.",
      "Kubernetes · Fluentd · OpenSearch", f"https://github.com/{USER}/Honeypot-CK8s"),
@@ -617,7 +617,7 @@ def build():
             (ASSETS / f"{name}-{theme}.svg").write_text(content, encoding="utf-8")
 
     # GitHub caches images hard: change the query string only when the content changes
-    v = f"{total}-t11"
+    v = f"{total}-t12"
     scale = 830 / W  # README column width in px over the SVG viewBox width
     buttons = "\n  ".join(f'<a href="{url}">{picture(f"button-{slug}", text, v, str(round(widths[slug] * scale)))}</a>'
                           for slug, text, url, _ in LINKS)
